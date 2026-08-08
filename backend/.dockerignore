@@ -1,0 +1,10 @@
+# Secrets must never enter the image
+.env
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/

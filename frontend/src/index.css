@@ -1,0 +1,346 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+:root {
+  --navy-950: #050810;
+  --navy-900: #0A0F1E;
+  --navy-800: #0D1426;
+  --navy-700: #111929;
+  --navy-600: #162038;
+  --indigo: #6366F1;
+  --indigo-light: #818CF8;
+  --cyan: #06B6D4;
+  --cyan-light: #22D3EE;
+  --emerald: #10B981;
+  --amber: #F59E0B;
+  --rose: #F43F5E;
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--navy-900);
+  background-image:
+    radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(6, 182, 212, 0.06) 0%, transparent 50%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #E2E8F0;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--navy-800); }
+::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.7); }
+
+/* ── Glass morphism ─────────────────────────────────────────────────────────── */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ── Gradient text ──────────────────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--indigo-light) 0%, var(--cyan-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-amber {
+  background: linear-gradient(135deg, #FBBF24 0%, #F97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glow effects ───────────────────────────────────────────────────────────── */
+.glow-indigo { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
+.glow-cyan   { box-shadow: 0 0 20px rgba(6, 182, 212, 0.3); }
+.glow-emerald { box-shadow: 0 0 20px rgba(16, 185, 129, 0.25); }
+
+/* ── Animated gradient border ───────────────────────────────────────────────── */
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--indigo), var(--cyan), var(--indigo));
+  background-size: 200% 200%;
+  animation: gradientMove 4s ease infinite;
+  z-index: -1;
+}
+@keyframes gradientMove {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+.gradient-border-violet {
+  position: relative;
+}
+.gradient-border-violet::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #8B5CF6, #D946EF, #22D3EE, #8B5CF6);
+  background-size: 300% 300%;
+  animation: gradientMove 5s ease infinite;
+  z-index: -1;
+}
+
+/* ── Vivid multi-color gradient border + glow ──────────────────────────────── */
+.gradient-border-vivid {
+  position: relative;
+}
+.gradient-border-vivid::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #8B5CF6, #D946EF, #F59E0B, #22D3EE, #8B5CF6);
+  background-size: 400% 400%;
+  animation: gradientMove 6s ease infinite;
+  z-index: -1;
+}
+.glow-prompt {
+  box-shadow:
+    0 0 28px rgba(217, 70, 239, 0.35),
+    0 0 60px rgba(34, 211, 238, 0.18),
+    0 0 90px rgba(139, 92, 246, 0.18);
+}
+
+/* ── Vivid animated gradient text ───────────────────────────────────────────── */
+.gradient-text-vivid {
+  background: linear-gradient(135deg, #A78BFA, #E879F9, #FBBF24, #22D3EE, #A78BFA);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientMove 5s ease infinite;
+}
+
+/* ── Streaming caret ────────────────────────────────────────────────────────── */
+.streaming-caret {
+  color: #C4B5FD;
+  animation: caretBlink 1s steps(1) infinite;
+}
+@keyframes caretBlink {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* ── Shine sweep across a card ──────────────────────────────────────────────── */
+.shine-sweep {
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.08) 45%,
+    rgba(255, 255, 255, 0.16) 50%,
+    rgba(255, 255, 255, 0.08) 55%,
+    transparent 70%
+  );
+  background-size: 250% 100%;
+  animation: shineSweep 7s ease-in-out infinite;
+}
+@keyframes shineSweep {
+  0%     { background-position: 130% 0; }
+  55%, 100% { background-position: -130% 0; }
+}
+
+/* ── Shimmer loading ────────────────────────────────────────────────────────── */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.03) 25%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* ── Slide-up entry ─────────────────────────────────────────────────────────── */
+.animate-slide-up {
+  animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Fade-in ────────────────────────────────────────────────────────────────── */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out both;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Staggered children ─────────────────────────────────────────────────────── */
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.10s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.20s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.30s; }
+
+/* ── Progress bar ───────────────────────────────────────────────────────────── */
+.progress-bar-fill {
+  transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Optimized prompt text ──────────────────────────────────────────────────── */
+.optimized-prompt-text {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.9rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #F8FAFC;
+}
+
+/* ── Metric number ──────────────────────────────────────────────────────────── */
+.metric-number {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ── Section cards ──────────────────────────────────────────────────────────── */
+.section-card {
+  border-radius: 16px;
+  padding: 1.75rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.section-card:hover {
+  transform: translateY(-1px);
+}
+
+/* ── Sidebar nav item active ────────────────────────────────────────────────── */
+.nav-item-active {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.2) 0%, transparent 100%);
+  border-left: 2px solid var(--indigo);
+  color: var(--indigo-light);
+}
+
+/* ── Tag pill ───────────────────────────────────────────────────────────────── */
+.tag-pill {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* ── Copy button ────────────────────────────────────────────────────────────── */
+.copy-btn {
+  transition: all 0.2s ease;
+}
+.copy-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--indigo-light);
+}
+
+/* ── Comparison bar ─────────────────────────────────────────────────────────── */
+.comparison-bar {
+  height: 10px;
+  border-radius: 999px;
+  transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Number counter animation ───────────────────────────────────────────────── */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.count-anim {
+  animation: countUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Textarea ───────────────────────────────────────────────────────────────── */
+.prompt-textarea {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  color: #E2E8F0;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  padding: 1rem 1.25rem;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  outline: none;
+}
+.prompt-textarea:focus {
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+.prompt-textarea::placeholder { color: rgba(255,255,255,0.25); }
+
+/* ── Typography readability bumps ────────────────────────────────────────────
+   These unlayered rules override Tailwind's layered utilities so the UI uses
+   slightly larger, more readable text throughout the app. */
+body {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.text-\[9px\]  { font-size: 0.75rem;  } /* 12px */
+.text-\[10px\] { font-size: 0.8125rem; } /* 13px */
+.text-\[11px\] { font-size: 0.875rem;  } /* 14px */
+.text-xs       { font-size: 0.8125rem; } /* 13px */
+.text-sm       { font-size: 0.9375rem; } /* 15px */
+.text-base     { font-size: 1rem;      } /* 16px */
+
+.tag-pill {
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.optimized-prompt-text {
+  font-size: 0.95rem;
+  line-height: 1.9;
+}
+
+.prompt-textarea {
+  font-size: 1rem;
+}
+
+.metric-number {
+  line-height: 1.3;
+}
