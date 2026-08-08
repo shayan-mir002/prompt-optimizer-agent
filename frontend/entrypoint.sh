@@ -1,13 +1,12 @@
 #!/bin/sh
 set -e
 
-# Render the nginx template, injecting $BACKEND_URL and $PORT with sane
-# defaults so the same image works locally AND on Railway (which injects
-# $PORT and expects the app to listen on it).
-export PORT="${PORT:-80}"
+# Render the nginx template, injecting $BACKEND_URL. The container listens on
+# a fixed port 80 (see nginx.conf.template) so Railway's health check and the
+# public domain target port are always 80 — no port guessing.
 export BACKEND_URL="${BACKEND_URL:-http://backend:8080}"
 
-envsubst '${BACKEND_URL} ${PORT}' \
+envsubst '${BACKEND_URL}' \
   < /etc/nginx/conf.d/default.conf.template \
   > /etc/nginx/conf.d/default.conf
 
