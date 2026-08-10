@@ -37,20 +37,14 @@ export const OptimizerWorkflowSection: React.FC<OptimizerWorkflowSectionProps> =
     </div>
 
     <div className="divide-y divide-white/5">
-      <Row label="Raw Prompt Tokens (display only)" value={analytics.raw_prompt_tokens} />
-      <div className="pt-2 pb-1">
-        <p className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider">Internal Optimization Overhead</p>
-      </div>
-      <Row label="Validation Tokens" value={analytics.validation_tokens} />
-      <Row label="Prompt Analysis Tokens" value={analytics.decision_making_tokens} />
+      <Row label="Raw Prompt Tokens" value={analytics.raw_prompt_tokens} />
       <Row label="Skill Selection Tokens" value={analytics.skill_selection_tokens} />
       <Row label="Prompt Optimization Tokens" value={analytics.optimization_tokens} />
-      <Row label="Optimization Overhead Total" value={analytics.optimization_overhead_tokens} accent="text-amber-300" />
       <div className="pt-2 pb-1">
         <p className="text-[10px] font-semibold text-cyan-400 uppercase tracking-wider">Estimated Prompt Execution</p>
       </div>
       <Row label="Estimated Execution Tokens" value={analytics.estimated_execution_tokens} estimated accent="text-cyan-300" />
-      <Row label="Total Optimizer Tokens (overhead + execution)" value={analytics.total_optimizer_tokens} accent="text-indigo-300" />
+      <Row label="Total Optimizer Tokens (raw + skill selection + optimization + execution)" value={analytics.total_optimizer_tokens} accent="text-indigo-300" />
     </div>
 
     {/* Execution detail */}

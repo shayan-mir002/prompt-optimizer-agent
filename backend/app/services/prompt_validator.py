@@ -80,12 +80,20 @@ class PromptValidator:
             {
                 "role": "system",
                 "content": (
-                    "You are a prompt quality gate. Evaluate whether the given text "
-                    "is a meaningful, actionable prompt that an AI assistant could work with. "
+                    "You are a prompt quality gate. Decide whether the given text "
+                    "can be optimized into a better prompt. Accept any text that "
+                    "contains an actual request or instruction — asking an AI to "
+                    "explain, write, code, analyze, summarize, plan, teach, etc. "
+                    "— even if it is vague or incomplete.\n\n"
+                    "Reject (is_valid=false) input that is NOT a usable prompt:\n"
+                    '- Casual conversation or greetings (e.g. "hi", "how are you")\n'
+                    "- Gibberish, random keystrokes, or meaningless text\n\n"
                     "Return ONLY a JSON object: "
                     '{"is_valid": true|false, "errors": ["error message", ...]}'
                     "\n\nErrors should only appear when is_valid is false. "
-                    "Be lenient — accept any prompt that has clear intent, even if vague."
+                    "Be very lenient — accept any prompt with a request or task "
+                    'intent, including "explain X", "tell me about X", '
+                    '"summarize X". Only reject text that has no task at all.'
                 ),
             },
             {
@@ -102,8 +110,10 @@ class PromptValidator:
             return [], response.total_tokens, response.prompt_tokens, response.completion_tokens
         data = extract_json(response.content)
         if not data.get("is_valid", True):
+            # Always surface the exact user-facing message for non-optimizable
+            # input, regardless of what the model returned.
             return (
-                data.get("errors", ["Prompt does not appear meaningful or actionable."]),
+                ["Please enter an appropriate prompt to optimize"],
                 response.total_tokens,
                 response.prompt_tokens,
                 response.completion_tokens,

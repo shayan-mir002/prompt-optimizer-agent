@@ -66,9 +66,8 @@ class ManualProjection:
     ) -> ManualProjectionOutcome:
 
         # 1) Raw prompt tokens
-        # 2) Decision making tokens (analysis) — OPTIMIZER OVERHEAD. Per spec the
-        #    manual workflow excludes optimizer overhead, so this is recorded but
-        #    NOT included in the manual total or cost.
+        # 2) Decision making tokens (analysis) — the AI reads the prompt and
+        #    decides how to proceed. Counted in the manual workflow total.
         decision_making_tokens = analysis.tokens_used
 
         # 3) Tokens to generate the questions
@@ -101,8 +100,7 @@ class ManualProjection:
 
         # 6) Number of tokens to analyze the user answers (simulated)
         # (REAL LLM measurement when available, otherwise a reading estimate)
-        # Recorded for transparency but NOT counted in the manual total — it is
-        # optimizer-style overhead, not part of the manual execution forecast.
+        # Counted in the manual workflow total.
         if sim is not None and sim.answer_analysis_tokens is not None:
             estimated_answer_analysis_tokens = sim.answer_analysis_tokens
         else:
@@ -110,20 +108,29 @@ class ManualProjection:
                 (raw_prompt_tokens + estimated_answer_tokens) * 1.2
             )
 
-        # Manual workflow total = Raw Prompt + Question Generation + User
-        # Answers + Execution. Only these four components (per spec).
+        # Manual workflow total = Raw Prompt + Decision Making + Question
+        # Generation + User Answers + Execution + Answer Analysis. All six
+        # components are counted in the manual projection.
         total = (
             raw_prompt_tokens
+            + decision_making_tokens
             + question_generation_tokens
             + estimated_answer_tokens
             + estimated_execution_tokens
+            + estimated_answer_analysis_tokens
         )
 
         # Cost calculation (manual execution only)
-        # Inputs: raw prompt + the user's answers
-        input_tokens = raw_prompt_tokens + estimated_answer_tokens
-        # Outputs: generated questions + final execution output
-        output_tokens = question_generation_tokens + estimated_execution_tokens
+        # Inputs: raw prompt + the user's answers + decision making (reading)
+        input_tokens = (
+            raw_prompt_tokens + estimated_answer_tokens + decision_making_tokens
+        )
+        # Outputs: generated questions + final execution output + answer analysis
+        output_tokens = (
+            question_generation_tokens
+            + estimated_execution_tokens
+            + estimated_answer_analysis_tokens
+        )
 
         input_cost = self._calc.input_cost(input_tokens)
         output_cost = self._calc.output_cost(output_tokens)

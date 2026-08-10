@@ -59,13 +59,9 @@ export interface ExecutionEstimationResult {
 
 export interface OptimizerAnalytics {
   raw_prompt_tokens: number;
-  validation_tokens: number;
-  decision_making_tokens: number;
-  question_generation_tokens: number;
   skill_selection_tokens: number;
   optimization_tokens: number;
   optimized_prompt_tokens: number;
-  optimization_overhead_tokens: number;
   estimated_execution_tokens: number;
   total_optimizer_tokens: number;
   estimated_optimizer_input_cost: number;
@@ -99,8 +95,6 @@ export interface ComparisonResult {
   estimated_questions_required: number;
   manual_cost: number;
   optimizer_cost: number;
-  optimization_overhead_tokens: number;
-  optimizer_total_tokens: number;
 }
 
 export interface FinalReport {
@@ -131,13 +125,10 @@ export interface FinalReport {
   estimated_manual_cost: number;
   // Optimizer Workflow
   raw_prompt_tokens_opt: number;
-  decision_making_tokens_opt: number;
-  question_generation_tokens_opt: number;
   skill_selection_tokens: number;
   optimization_tokens: number;
   optimized_prompt_tokens: number;
   estimated_optimizer_execution_tokens: number;
-  optimization_overhead_tokens: number;
   total_optimizer_tokens: number;
   estimated_optimizer_cost: number;
   estimated_execution_cost: number;
@@ -147,8 +138,6 @@ export interface FinalReport {
   tokens_saved: number;
   percentage_reduction: number;
   estimated_cost_saved: number;
-  optimization_overhead_tokens_total: number;
-  optimizer_total_tokens_total: number;
 }
 
 export interface OptimizeResponse {

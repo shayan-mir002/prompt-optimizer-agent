@@ -72,7 +72,6 @@ export const FinalReportSection: React.FC<FinalReportSectionProps> = ({ report }
       '',
       '── OPTIMIZER WORKFLOW ──',
       `Raw Prompt Tokens: ${report.raw_prompt_tokens_opt}`,
-      `Prompt Analysis Tokens: ${report.decision_making_tokens_opt}`,
       `Skill Selection Tokens: ${report.skill_selection_tokens}`,
       `Prompt Optimization Tokens: ${report.optimization_tokens}`,
       `Estimated Execution Tokens: ${report.estimated_optimizer_execution_tokens}`,
@@ -223,7 +222,6 @@ export const FinalReportSection: React.FC<FinalReportSectionProps> = ({ report }
             <SectionTitle>Optimizer Workflow</SectionTitle>
             <div className="divide-y divide-white/5">
               <DataRow label="Raw Prompt Tokens" value={report.raw_prompt_tokens_opt} />
-              <DataRow label="Prompt Analysis Tokens" value={report.decision_making_tokens_opt} />
               <DataRow label="Skill Selection Tokens" value={report.skill_selection_tokens} />
               <DataRow label="Prompt Optimization Tokens" value={report.optimization_tokens} />
               <DataRow label="Estimated Execution Tokens" value={report.estimated_optimizer_execution_tokens} estimated />

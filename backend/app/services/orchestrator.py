@@ -467,24 +467,19 @@ class OptimizationOrchestrator:
         )
 
         # ── Phase 8: Optimizer analytics ──────────────────────────────────────
-        # Two distinct buckets:
-        #   Optimization Overhead = validation + analysis + skill + optimization
-        #   Estimated Execution    = optimized prompt input + estimated output
+        # Optimizer pipeline = raw prompt + skill selection + prompt
+        # optimization + estimated execution. Validation and prompt analysis
+        # are counted in the manual workflow, not the optimizer.
         optimizer_analytics = self._build_optimizer_analytics(
             raw_tokens=raw_tokens,
-            validation=validation_outcome,
-            analysis=analysis_outcome,
             selection=selection_outcome,
             optimization=opt_outcome,
-            question_generation_tokens=clarification.question_generation_tokens,
             optimized_prompt_tokens=optimized_prompt.tokens,
             estimated_execution_tokens=execution_estimation.total_estimated_tokens,
             estimated_output_tokens=execution_estimation.estimated_output_tokens,
         )
         logger.info(
-            "Stage 2 — optimizer overhead: %d  execution: %d  total: %d  cost: $%.6f",
-            optimizer_analytics.optimization_overhead_tokens,
-            optimizer_analytics.estimated_execution_tokens,
+            "Stage 2 — optimizer total: %d  cost: $%.6f",
             optimizer_analytics.total_optimizer_tokens,
             optimizer_analytics.estimated_optimizer_cost,
         )
@@ -715,83 +710,69 @@ class OptimizationOrchestrator:
         self,
         *,
         raw_tokens: int,
-        validation: ValidationOutcome,
-        analysis: AnalysisOutcome,
         selection: SelectionOutcome,
         optimization: OptimizationOutcome,
-        question_generation_tokens: int,
         optimized_prompt_tokens: int,
         estimated_execution_tokens: int,
         estimated_output_tokens: int,
     ) -> OptimizerAnalytics:
-        """Aggregate token counts into two SEPARATE buckets:
+        """Aggregate token counts for the optimizer pipeline.
 
-        Optimization Overhead = Validation + Prompt Analysis + Skill Selection
-                                + Prompt Optimization   (internal processing)
-        Estimated Execution   = Optimized Prompt Input + Estimated Output
+        Optimizer components:
+          Raw Prompt        = the user's original prompt text
+          Skill Selection   = the call that picks the optimization skill
+          Prompt Optimization = the call that rewrites the prompt
+          Estimated Execution = optimized prompt input + estimated output
                                 (what the target model consumes)
 
-        Total Optimizer Tokens = Overhead + Execution.
+        Total Optimizer Tokens = Raw + Skill Selection + Prompt Optimization
+                                 + Estimated Execution.
 
-        NOTE: raw prompt tokens are NOT added to the total — the raw prompt is
-        already inside every overhead call's input, so adding it again would
-        double count it. It is reported separately for display only.
+        Validation and prompt analysis are part of the manual workflow and are
+        NOT counted in the optimizer total.
         """
-        validation_tokens = validation.tokens_used
-        analysis_tokens = analysis.tokens_used
         skill_tokens = selection.tokens_used
         optimization_tokens = optimization.llm_tokens_used
 
-        overhead = (
-            validation_tokens + analysis_tokens + skill_tokens + optimization_tokens
+        total = (
+            raw_tokens + skill_tokens + optimization_tokens + estimated_execution_tokens
         )
-        total = overhead + estimated_execution_tokens
 
-        # Overhead cost — exact per-call input/output from the API
-        overhead_input = (
-            validation.input_tokens
-            + analysis.input_tokens
+        # Cost — input/output for the components counted in the total
+        optimizer_input = (
+            raw_tokens
             + selection.input_tokens
             + optimization.input_tokens
+            + optimized_prompt_tokens
         )
-        overhead_output = (
-            validation.output_tokens
-            + analysis.output_tokens
-            + selection.output_tokens
-            + optimization.output_tokens
+        optimizer_output = (
+            selection.output_tokens + optimization.output_tokens + estimated_output_tokens
         )
-        overhead_input_cost = self._calc.input_cost(overhead_input)
-        overhead_output_cost = self._calc.output_cost(overhead_output)
+        total_input_cost = self._calc.input_cost(optimizer_input)
+        total_output_cost = self._calc.output_cost(optimizer_output)
+        total_cost = round(total_input_cost + total_output_cost, 8)
 
         # Execution cost — target model consuming the final optimized prompt
         exec_input_cost = self._calc.input_cost(optimized_prompt_tokens)
         exec_output_cost = self._calc.output_cost(estimated_output_tokens)
 
-        total_input_cost = round(overhead_input_cost + exec_input_cost, 8)
-        total_output_cost = round(overhead_output_cost + exec_output_cost, 8)
-        total_cost = round(total_input_cost + total_output_cost, 8)
-
         self._log_tokens(
-            "Optimization Overhead",
-            input_tokens=overhead_input,
-            output_tokens=overhead_output,
-            subtotal=overhead,
-            formula="validation + analysis + skill + optimization",
+            "Optimizer Pipeline",
+            input_tokens=optimizer_input,
+            output_tokens=optimizer_output,
+            subtotal=total,
+            formula="raw + skill selection + optimization + estimated execution",
         )
 
         return OptimizerAnalytics(
             raw_prompt_tokens=raw_tokens,
-            validation_tokens=validation_tokens,
-            decision_making_tokens=analysis_tokens,
-            question_generation_tokens=question_generation_tokens,
             skill_selection_tokens=skill_tokens,
             optimization_tokens=optimization_tokens,
             optimized_prompt_tokens=optimized_prompt_tokens,
-            optimization_overhead_tokens=overhead,
             estimated_execution_tokens=estimated_execution_tokens,
             total_optimizer_tokens=total,
-            estimated_optimizer_input_cost=total_input_cost,
-            estimated_optimizer_output_cost=total_output_cost,
+            estimated_optimizer_input_cost=round(total_input_cost, 8),
+            estimated_optimizer_output_cost=round(total_output_cost, 8),
             estimated_optimizer_cost=total_cost,
             estimated_execution_input_cost=round(exec_input_cost, 8),
             estimated_execution_output_cost=round(exec_output_cost, 8),
@@ -806,11 +787,10 @@ class OptimizationOrchestrator:
     ) -> ComparisonResult:
         """Compare the manual workflow total with the optimizer TOTAL.
 
-        Estimated Manual Tokens   = raw prompt + questions + user answers
-                                    + execution (manual workflow)
-        Estimated Optimizer Tokens = optimization overhead + estimated
-                                    execution (the full pipeline, including
-                                    internal processing)
+        Estimated Manual Tokens    = raw prompt + decision making + questions
+                                     + user answers + execution + answer analysis
+        Estimated Optimizer Tokens = raw prompt + skill selection + prompt
+                                     optimization + estimated execution
 
         Token Savings = Manual Total − Optimizer Total.
         """
@@ -832,6 +812,4 @@ class OptimizationOrchestrator:
             estimated_questions_required=clarification.num_questions,
             manual_cost=manual.estimated_manual_cost,
             optimizer_cost=optimizer_cost,
-            optimization_overhead_tokens=analytics.optimization_overhead_tokens,
-            optimizer_total_tokens=optimizer_tokens,
         )

@@ -176,7 +176,6 @@ def _section_optimizer(console: Console, result: Dict[str, Any]) -> None:
 
     steps = [
         ("Raw Prompt", _tokens(analytics.get("raw_prompt_tokens")) + " tokens", "actual"),
-        ("Validation", _tokens(analytics.get("validation_tokens")) + " tokens", "actual"),
         ("Skill Selection", _tokens(analytics.get("skill_selection_tokens")) + " tokens", "actual"),
         ("Prompt Optimization", _tokens(analytics.get("optimization_tokens")) + " tokens", "actual"),
         ("Optimized Prompt", _tokens(analytics.get("optimized_prompt_tokens")) + " tokens", "actual"),

@@ -56,13 +56,15 @@ export const ManualWorkflowSection: React.FC<ManualWorkflowSectionProps> = ({
 
     <div className="divide-y divide-white/5 mb-5">
       <Row label="1) Estimated tokens for prompt text" value={manual.raw_prompt_tokens} estimated />
-      <Row label="2) Estimated tokens to generate the questions" value={manual.question_generation_tokens} estimated />
+      <Row label="2) Decision making (prompt analysis) tokens" value={manual.decision_making_tokens} />
+      <Row label="3) Estimated tokens to generate the questions" value={manual.question_generation_tokens} estimated />
       <Row
-        label="3) Estimated user answer tokens (LLM-measured)"
+        label="4) Estimated user answer tokens (LLM-measured)"
         value={manual.estimated_answer_tokens}
         estimated
       />
-      <Row label="4) Estimated tokens to execute the answers" value={manual.estimated_execution_tokens} estimated />
+      <Row label="5) Estimated tokens to execute the answers" value={manual.estimated_execution_tokens} estimated />
+      <Row label="6) Estimated tokens to analyze the answers" value={manual.estimated_answer_analysis_tokens} estimated />
       {Array.isArray(manual.answer_tokens_by_question) && manual.answer_tokens_by_question.length > 0 && (
         <div className="py-2 border-b border-white/5">
           <div className="flex flex-wrap gap-1.5">
@@ -78,12 +80,6 @@ export const ManualWorkflowSection: React.FC<ManualWorkflowSectionProps> = ({
         </div>
       )}
       <Row label="Total Estimated Manual Tokens" value={manual.total_estimated_manual_tokens} accent="text-amber-300" />
-    </div>
-
-    <div className="mb-4 p-3 rounded-xl bg-white/3 border border-white/5">
-      <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Not counted (optimizer-style overhead)</p>
-      <Row label="Decision making (prompt analysis) tokens" value={manual.decision_making_tokens} muted />
-      <Row label="Answer analysis tokens" value={manual.estimated_answer_analysis_tokens} muted />
     </div>
 
     <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center mb-4">

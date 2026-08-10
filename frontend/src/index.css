@@ -6,15 +6,19 @@
 
 /* ── Base ──────────────────────────────────────────────────────────────────── */
 :root {
-  --navy-950: #050810;
-  --navy-900: #0A0F1E;
-  --navy-800: #0D1426;
-  --navy-700: #111929;
-  --navy-600: #162038;
-  --indigo: #6366F1;
-  --indigo-light: #818CF8;
-  --cyan: #06B6D4;
-  --cyan-light: #22D3EE;
+  --navy-950: #05070F;
+  --navy-900: #0B0716;
+  --navy-800: #120A24;
+  --navy-700: #170D2E;
+  --navy-600: #1C1138;
+  --indigo: #8B5CF6;
+  --indigo-light: #A78BFA;
+  --violet: #8B5CF6;
+  --violet-light: #A78BFA;
+  --fuchsia: #D946EF;
+  --fuchsia-light: #E879F9;
+  --cyan: #22D3EE;
+  --cyan-light: #67E8F9;
   --emerald: #10B981;
   --amber: #F59E0B;
   --rose: #F43F5E;
@@ -35,8 +39,9 @@ html {
 body {
   background-color: var(--navy-900);
   background-image:
-    radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(6, 182, 212, 0.06) 0%, transparent 50%);
+    radial-gradient(ellipse at 15% 10%, rgba(139, 92, 246, 0.16) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 20%, rgba(217, 70, 239, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse at 60% 100%, rgba(34, 211, 238, 0.08) 0%, transparent 50%);
   background-attachment: fixed;
   min-height: 100vh;
   font-family: 'Inter', system-ui, sans-serif;
@@ -46,8 +51,8 @@ body {
 /* ── Scrollbar ──────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--navy-800); }
-::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.4); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.7); }
+::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(217, 70, 239, 0.7); }
 
 /* ── Glass morphism ─────────────────────────────────────────────────────────── */
 .glass {
@@ -66,7 +71,7 @@ body {
 
 /* ── Gradient text ──────────────────────────────────────────────────────────── */
 .gradient-text {
-  background: linear-gradient(135deg, var(--indigo-light) 0%, var(--cyan-light) 100%);
+  background: linear-gradient(135deg, var(--indigo-light) 0%, var(--fuchsia-light) 50%, var(--cyan-light) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -80,8 +85,9 @@ body {
 }
 
 /* ── Glow effects ───────────────────────────────────────────────────────────── */
-.glow-indigo { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
-.glow-cyan   { box-shadow: 0 0 20px rgba(6, 182, 212, 0.3); }
+.glow-indigo { box-shadow: 0 0 20px rgba(139, 92, 246, 0.35); }
+.glow-cyan   { box-shadow: 0 0 20px rgba(34, 211, 238, 0.3); }
+.glow-fuchsia { box-shadow: 0 0 20px rgba(217, 70, 239, 0.3); }
 .glow-emerald { box-shadow: 0 0 20px rgba(16, 185, 129, 0.25); }
 
 /* ── Animated gradient border ───────────────────────────────────────────────── */
@@ -93,7 +99,7 @@ body {
   position: absolute;
   inset: -1px;
   border-radius: inherit;
-  background: linear-gradient(135deg, var(--indigo), var(--cyan), var(--indigo));
+  background: linear-gradient(135deg, var(--violet), var(--fuchsia), var(--cyan));
   background-size: 200% 200%;
   animation: gradientMove 4s ease infinite;
   z-index: -1;
@@ -251,7 +257,7 @@ body {
 
 /* ── Sidebar nav item active ────────────────────────────────────────────────── */
 .nav-item-active {
-  background: linear-gradient(90deg, rgba(99, 102, 241, 0.2) 0%, transparent 100%);
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.2) 0%, transparent 100%);
   border-left: 2px solid var(--indigo);
   color: var(--indigo-light);
 }
@@ -271,7 +277,7 @@ body {
   transition: all 0.2s ease;
 }
 .copy-btn:hover {
-  background: rgba(99, 102, 241, 0.2);
+  background: rgba(139, 92, 246, 0.2);
   color: var(--indigo-light);
 }
 
@@ -307,8 +313,8 @@ body {
   outline: none;
 }
 .prompt-textarea:focus {
-  border-color: rgba(99, 102, 241, 0.5);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: rgba(139, 92, 246, 0.6);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
 }
 .prompt-textarea::placeholder { color: rgba(255,255,255,0.25); }
 

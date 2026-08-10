@@ -67,13 +67,10 @@ class ReportGenerator:
 
             # ── Optimizer Workflow
             raw_prompt_tokens_opt=optimizer_analytics.raw_prompt_tokens,
-            decision_making_tokens_opt=optimizer_analytics.decision_making_tokens,
-            question_generation_tokens_opt=optimizer_analytics.question_generation_tokens,
             skill_selection_tokens=optimizer_analytics.skill_selection_tokens,
             optimization_tokens=optimizer_analytics.optimization_tokens,
             optimized_prompt_tokens=optimizer_analytics.optimized_prompt_tokens,
             estimated_optimizer_execution_tokens=optimizer_analytics.estimated_execution_tokens,
-            optimization_overhead_tokens=optimizer_analytics.optimization_overhead_tokens,
             total_optimizer_tokens=optimizer_analytics.total_optimizer_tokens,
             estimated_optimizer_cost=optimizer_analytics.estimated_optimizer_cost,
             estimated_execution_cost=optimizer_analytics.estimated_execution_cost,
@@ -84,6 +81,4 @@ class ReportGenerator:
             tokens_saved=comparison.tokens_saved,
             percentage_reduction=comparison.percentage_reduction,
             estimated_cost_saved=comparison.estimated_cost_saved,
-            optimization_overhead_tokens_total=comparison.optimization_overhead_tokens,
-            optimizer_total_tokens_total=comparison.optimizer_total_tokens,
         )

@@ -39,7 +39,6 @@ const TokenBar: React.FC<TokenBarProps> = ({ label, value, max, color, estimated
 export const TokenAnalyticsSection: React.FC<TokenAnalyticsSectionProps> = ({ analytics }) => {
   const maxVal = Math.max(
     analytics.raw_prompt_tokens,
-    analytics.decision_making_tokens,
     analytics.skill_selection_tokens,
     analytics.optimization_tokens,
     analytics.estimated_execution_tokens,
@@ -47,11 +46,8 @@ export const TokenAnalyticsSection: React.FC<TokenAnalyticsSectionProps> = ({ an
 
   const bars = [
     { label: 'Raw Prompt Tokens', value: analytics.raw_prompt_tokens, color: 'bg-slate-400' },
-    { label: 'Validation Tokens', value: analytics.validation_tokens, color: 'bg-rose-400' },
-    { label: 'Prompt Analysis Tokens', value: analytics.decision_making_tokens, color: 'bg-indigo-400' },
     { label: 'Skill Selection Tokens', value: analytics.skill_selection_tokens, color: 'bg-emerald-400' },
     { label: 'Prompt Optimization Tokens', value: analytics.optimization_tokens, color: 'bg-indigo-300' },
-    { label: 'Optimization Overhead (internal)', value: analytics.optimization_overhead_tokens, color: 'bg-amber-300' },
     { label: 'Estimated Execution Tokens', value: analytics.estimated_execution_tokens, color: 'bg-cyan-400', estimated: true },
   ];
 

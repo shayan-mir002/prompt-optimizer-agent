@@ -1,12 +1,14 @@
 # ── Secrets (never commit) ────────────────────────────────────────────────
 backend/.env
 .env
+backend/app/core/secret.py
 
 # ── Python ────────────────────────────────────────────────────────────────
 __pycache__/
 *.pyc
 *.pyo
 .venv/
+.venv312/
 venv/
 .pytest_cache/
 *.egg-info/
@@ -14,7 +16,14 @@ venv/
 # ── Node / frontend ────────────────────────────────────────────────────────
 node_modules/
 frontend/dist/
+backend/app/web/
 *.tsbuildinfo
+
+# ── Nuitka / desktop build artifacts ───────────────────────────────────────
+backend/*.exe
+backend/*.build/
+backend/*.dist/
+backend/*.onefile-build/
 
 # ── OS / editor ────────────────────────────────────────────────────────────
 .DS_Store

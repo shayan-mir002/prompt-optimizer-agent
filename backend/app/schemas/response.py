@@ -79,13 +79,9 @@ class ExecutionEstimationResult(BaseModel):
 
 class OptimizerAnalytics(BaseModel):
     raw_prompt_tokens: int
-    validation_tokens: int = 0
-    decision_making_tokens: int
-    question_generation_tokens: int
     skill_selection_tokens: int
     optimization_tokens: int
     optimized_prompt_tokens: int
-    optimization_overhead_tokens: int = 0
     estimated_execution_tokens: int
     total_optimizer_tokens: int
     estimated_optimizer_input_cost: float
@@ -123,8 +119,6 @@ class ComparisonResult(BaseModel):
     estimated_questions_required: int
     manual_cost: float
     optimizer_cost: float
-    optimization_overhead_tokens: int = 0
-    optimizer_total_tokens: int = 0
 
 
 # ── Phase 11: Final Report ────────────────────────────────────────────────────
@@ -161,13 +155,10 @@ class FinalReport(BaseModel):
 
     # ── Optimizer Workflow
     raw_prompt_tokens_opt: int
-    decision_making_tokens_opt: int
-    question_generation_tokens_opt: int
     skill_selection_tokens: int
     optimization_tokens: int
     optimized_prompt_tokens: int
     estimated_optimizer_execution_tokens: int
-    optimization_overhead_tokens: int = 0
     total_optimizer_tokens: int
     estimated_optimizer_cost: float
     estimated_execution_cost: float = 0.0
@@ -178,8 +169,6 @@ class FinalReport(BaseModel):
     tokens_saved: int
     percentage_reduction: float
     estimated_cost_saved: float
-    optimization_overhead_tokens_total: int = 0
-    optimizer_total_tokens_total: int = 0
 
 
 # ── Root Response ─────────────────────────────────────────────────────────────

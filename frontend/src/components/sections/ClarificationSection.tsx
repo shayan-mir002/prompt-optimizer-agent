@@ -1,8 +1,7 @@
 // src/components/sections/ClarificationSection.tsx
 import React from 'react';
-import { MessageSquare, Hash, ListChecks } from 'lucide-react';
+import { MessageSquare, ListChecks } from 'lucide-react';
 import type { ClarificationResult } from '../../types/optimizer';
-import { MetricCard } from '../ui/MetricCard';
 
 interface ClarificationSectionProps {
   clarification: ClarificationResult;
@@ -19,13 +18,6 @@ export const ClarificationSection: React.FC<ClarificationSectionProps> = ({ clar
         <p className="text-xs text-slate-500">First the AI plans how many questions are needed, then it generates them (no answers requested)</p>
       </div>
     </div>
-
-    {/* Metrics */}
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 stagger-children">
-      <MetricCard label="Questions Required" value={clarification.num_questions} accent="cyan" />
-      <MetricCard label="Count Planning Tokens" value={clarification.question_count_tokens} accent="indigo" />
-      <MetricCard label="Question Text Tokens" value={clarification.question_text_tokens} accent="indigo" />
-      <MetricCard label="Est. Answer Tokens" value={clarification.estimated_answer_tokens} accent="amber" estimated />    </div>
 
     <div className="mb-5">
       <div className="flex items-center gap-1.5 mb-2">

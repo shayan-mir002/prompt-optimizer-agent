@@ -58,7 +58,7 @@ export const ComparisonSection: React.FC<ComparisonSectionProps> = ({ comparison
           textColor="text-amber-300"
         />
         <CompBar
-          label="Optimizer Total Tokens (incl. overhead)"
+          label="Optimizer Total Tokens"
           value={comparison.optimizer_tokens}
           max={maxTokens}
           color="bg-gradient-to-r from-indigo-500 to-cyan-500"
@@ -67,10 +67,9 @@ export const ComparisonSection: React.FC<ComparisonSectionProps> = ({ comparison
       </div>
 
       <div className="mb-4 p-2.5 rounded-lg bg-white/5 border border-white/10 text-[11px] text-slate-400">
-        Optimizer total = internal overhead (
-        {comparison.optimization_overhead_tokens.toLocaleString()} tokens) + estimated
-        execution ({comparison.optimizer_total_tokens - comparison.optimization_overhead_tokens} tokens).
-        Manual total includes raw prompt + questions + answers + execution.
+        Optimizer total = raw prompt + skill selection + prompt optimization +
+        estimated execution. Manual total includes raw prompt + decision making +
+        questions + answers + execution + answer analysis.
       </div>
 
       {/* Stat grid */}

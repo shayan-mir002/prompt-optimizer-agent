@@ -73,14 +73,14 @@ function InputView({
     <main className="flex flex-col items-center justify-center min-h-[calc(100vh-60px)] px-4 py-12">
       {/* Hero */}
       <div className="text-center mb-10 animate-slide-up">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-indigo-500/20 mb-6">
-          <Sparkles size={13} className="text-indigo-400" />
-          <span className="text-xs text-indigo-300 font-medium">Two-Step AI Optimization Pipeline</span>
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-fuchsia-500/20 mb-6">
+          <Sparkles size={13} className="text-fuchsia-400" />
+          <span className="text-xs text-fuchsia-300 font-medium">Two-Step AI Optimization Pipeline</span>
         </div>
         <h1 className="text-4xl sm:text-5xl font-black mb-4 leading-tight">
           Transform Your Prompts
           <br />
-          <span className="gradient-text">Into Masterpieces</span>
+          <span className="gradient-text-vivid">Into Masterpieces</span>
         </h1>
         <p className="text-base text-slate-400 max-w-xl mx-auto leading-relaxed">
           Step 1 validates your prompt, checks clarity and projects the manual
@@ -116,7 +116,7 @@ function InputView({
               disabled={!prompt.trim()}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ml-auto
                 ${prompt.trim()
-                  ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white hover:from-indigo-500 hover:to-indigo-400 glow-indigo hover:scale-[1.02]'
+                  ? 'bg-gradient-to-r from-violet-600 via-fuchsia-500 to-violet-500 text-white hover:from-violet-500 hover:to-fuchsia-400 glow-indigo hover:scale-[1.02]'
                   : 'bg-white/5 text-slate-500 cursor-not-allowed border border-white/5'
                 }`}
             >
@@ -274,15 +274,48 @@ export default function App() {
       )}
 
       {status === 'analyzed' && preResult && (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
-          <PreOptimizationView
-            pre={preResult}
-            rawPrompt={rawPrompt}
-            onProceed={runOptimize}
-            onBack={reset}
-            loading={false}
-          />
-        </div>
+        preResult.validation.is_valid ? (
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
+            <PreOptimizationView
+              pre={preResult}
+              rawPrompt={rawPrompt}
+              onProceed={runOptimize}
+              onBack={reset}
+              loading={false}
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 px-4 animate-fade-in">
+            <div className="glass rounded-2xl border border-rose-500/25 p-8 max-w-md w-full text-center">
+              <div className="p-4 rounded-full bg-rose-500/15 mb-5 inline-flex">
+                <AlertTriangle size={26} className="text-rose-400" />
+              </div>
+              <h2 className="text-lg font-bold text-white mb-2">
+                {preResult.validation.errors[0] || 'Please enter an appropriate prompt to optimize'}
+              </h2>
+              {preResult.validation.errors.length > 1 && (
+                <ul className="space-y-1.5 mb-5 text-left">
+                  {preResult.validation.errors.slice(1).map((e, i) => (
+                    <li key={i} className="text-sm text-rose-300 flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-400 mt-1.5 shrink-0" />
+                      {e}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="text-xs text-slate-500 mb-6">
+                Enter a task you want the AI to perform — writing, coding, analysis,
+                marketing and more — and we'll sharpen it for you.
+              </p>
+              <button
+                onClick={reset}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white text-sm font-medium hover:from-violet-500 hover:to-fuchsia-400 glow-indigo transition-all"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        )
       )}
 
       {status === 'success' && result && (

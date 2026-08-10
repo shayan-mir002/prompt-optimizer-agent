@@ -1,10 +1,11 @@
 # Serve the built React app and proxy /api/* to the backend.
 # This is a template: on startup the container renders it with `envsubst`,
-# injecting $BACKEND_URL (the backend base URL). nginx's own variables
-# ($host, $uri, ...) are preserved because envsubst only substitutes
-# ${BACKEND_URL}. nginx always listens on port 80.
+# injecting $BACKEND_URL (the backend base URL) and $PORT (the listen port).
+# nginx's own variables ($host, $uri, ...) are preserved because envsubst only
+# substitutes ${BACKEND_URL} and ${PORT}. Railway injects $PORT automatically;
+# local Docker runs fall back to port 80.
 server {
-    listen 80;
+    listen ${PORT};
 
     root /usr/share/nginx/html;
     index index.html;

@@ -13,10 +13,10 @@ export const Header: React.FC<HeaderProps> = ({ onReset, hasResult }) => (
       {/* Logo */}
       <div className="flex items-center gap-3">
         <div className="relative">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
             <Zap size={16} className="text-white" fill="white" />
           </div>
-          <div className="absolute -inset-0.5 rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-500 blur opacity-30 -z-10" />
+          <div className="absolute -inset-0.5 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 blur opacity-40 -z-10" />
         </div>
         <div>
           <span className="text-base font-bold gradient-text">PromptForge</span>
