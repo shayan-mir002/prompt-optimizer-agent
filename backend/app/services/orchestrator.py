@@ -26,7 +26,7 @@ from app.services.prompt_analyzer import PromptAnalyzer, AnalysisOutcome
 from app.services.skill_manager import SkillManager
 from app.services.skill_selector import SkillSelector, SelectionOutcome
 from app.services.prompt_optimizer import PromptOptimizer, OptimizationOutcome
-from app.services.execution_estimator import ExecutionEstimator
+from app.services.execution_estimator import ExecutionEstimator, ExecutionEstimate
 from app.services.manual_projection import ManualProjection
 from app.services.manual_simulator import ManualSimulator
 from app.services.report_generator import ReportGenerator
@@ -195,6 +195,14 @@ class OptimizationOrchestrator:
             question_generation_tokens=clarification.question_generation_tokens,
             analysis=analysis_outcome,
             sim=sim_outcome,
+            question_generation_input_tokens=(
+                clarification.question_count_input_tokens
+                + clarification.question_text_input_tokens
+            ),
+            question_generation_output_tokens=(
+                clarification.question_count_output_tokens
+                + clarification.question_text_output_tokens
+            ),
         )
         manual_projection = self._to_manual_schema(manual_outcome)
         self._log_tokens(
@@ -297,7 +305,7 @@ class OptimizationOrchestrator:
         )
 
         # ── Phases 7–11: estimation, analytics, comparison, report ────────────
-        return self._assemble_stage2(
+        return await self._assemble_stage2(
             raw_tokens=raw_tokens,
             analysis_outcome=analysis_outcome,
             validation_outcome=validation_outcome,
@@ -384,7 +392,7 @@ class OptimizationOrchestrator:
             "phase": "analytics",
             "label": "Estimating execution, calculating analytics & comparison…",
         })
-        result = self._assemble_stage2(
+        result = await self._assemble_stage2(
             raw_tokens=raw_tokens,
             analysis_outcome=analysis_outcome,
             validation_outcome=validation_outcome,
@@ -410,7 +418,7 @@ class OptimizationOrchestrator:
         """Format a Server-Sent-Events data frame from a JSON payload."""
         return f"data: {json.dumps({'type': event_type, **payload}, default=str)}\n\n"
 
-    def _assemble_stage2(
+    async def _assemble_stage2(
         self,
         *,
         raw_tokens: int,
@@ -441,10 +449,12 @@ class OptimizationOrchestrator:
         )
 
         # ── Phase 7: Execution estimation ─────────────────────────────────────
-        # Only the final optimized prompt size + complexity label are used.
-        # No optimization/analysis prompts enter this estimate (no recursion).
-        exec_est = self._estimator.estimate(
-            optimized_prompt.tokens, analysis_outcome.complexity
+        # Executes the final optimized prompt ONCE against the LLM so the
+        # "estimated execution" figure is a REAL measured token count. Only the
+        # optimized prompt text is executed (no optimization/analysis prompts;
+        # no recursion). Falls back to the heuristic estimator if the run fails.
+        exec_est = await self._measure_optimized_execution(
+            optimized_prompt.text, analysis_outcome.complexity
         )
         execution_estimation = ExecutionEstimationResult(
             input_tokens=exec_est.input_tokens,
@@ -459,7 +469,7 @@ class OptimizationOrchestrator:
             input_tokens=exec_est.input_tokens,
             output_tokens=exec_est.estimated_output_tokens,
             subtotal=exec_est.total_estimated_tokens,
-            formula="exec = optimized_prompt_tokens + output_tokens",
+            formula="exec = input + output (real LLM measurement)",
         )
         logger.info(
             "Stage 2 — exec estimate tokens: %d",
@@ -468,7 +478,7 @@ class OptimizationOrchestrator:
 
         # ── Phase 8: Optimizer analytics ──────────────────────────────────────
         # Optimizer pipeline = raw prompt + skill selection + prompt
-        # optimization + estimated execution. Validation and prompt analysis
+        # optimization + measured execution. Validation and prompt analysis
         # are counted in the manual workflow, not the optimizer.
         optimizer_analytics = self._build_optimizer_analytics(
             raw_tokens=raw_tokens,
@@ -476,6 +486,7 @@ class OptimizationOrchestrator:
             optimization=opt_outcome,
             optimized_prompt_tokens=optimized_prompt.tokens,
             estimated_execution_tokens=execution_estimation.total_estimated_tokens,
+            execution_input_tokens=execution_estimation.input_tokens,
             estimated_output_tokens=execution_estimation.estimated_output_tokens,
         )
         logger.info(
@@ -491,6 +502,14 @@ class OptimizationOrchestrator:
                 num_questions=clarification.num_questions,
                 question_generation_tokens=clarification.question_generation_tokens,
                 analysis=analysis_outcome,
+                question_generation_input_tokens=(
+                    clarification.question_count_input_tokens
+                    + clarification.question_text_input_tokens
+                ),
+                question_generation_output_tokens=(
+                    clarification.question_count_output_tokens
+                    + clarification.question_text_output_tokens
+                ),
             )
             manual_schema = self._to_manual_schema(manual_outcome)
 
@@ -587,11 +606,15 @@ class OptimizationOrchestrator:
             },
         ]
         count_tokens = 0
+        count_input = 0
+        count_output = 0
         try:
             count_response = await self._client.chat_completion(
                 count_messages, temperature=0.0, max_tokens=512
             )
             count_tokens = count_response.total_tokens
+            count_input = count_response.prompt_tokens
+            count_output = count_response.completion_tokens
             count_text = (count_response.content or "").strip()
             if not count_text or not any(ch.isdigit() for ch in count_text):
                 raise ValueError("Empty or non-numeric question-count response")
@@ -634,10 +657,14 @@ class OptimizationOrchestrator:
                 questions = []
             questions = questions[:num_questions]
             text_tokens = questions_response.total_tokens
+            text_input = questions_response.prompt_tokens
+            text_output = questions_response.completion_tokens
         except Exception as exc:
             logger.warning("Question-generation call failed — returning empty: %s", exc)
             questions = []
             text_tokens = 0
+            text_input = 0
+            text_output = 0
 
         est_answer_tokens = len(questions) * AVG_ANSWER_TOKENS
         est_combined = (
@@ -653,6 +680,10 @@ class OptimizationOrchestrator:
             question_count_tokens=count_tokens,
             question_text_tokens=text_tokens,
             question_generation_tokens=count_tokens + text_tokens,
+            question_count_input_tokens=count_input,
+            question_count_output_tokens=count_output,
+            question_text_input_tokens=text_input,
+            question_text_output_tokens=text_output,
             num_questions=len(questions),
             estimated_answer_tokens=est_answer_tokens,
             estimated_combined_prompt_tokens=est_combined,
@@ -706,6 +737,52 @@ class OptimizationOrchestrator:
             estimated_manual_cost=outcome.estimated_manual_cost,
         )
 
+    async def _measure_optimized_execution(
+        self, optimized_text: str, complexity: str
+    ) -> ExecutionEstimate:
+        """Phase 7 — play the optimized prompt against the LLM once so the
+        execution token figure is a REAL measurement. Falls back to the
+        heuristic estimator if the execution call fails."""
+        max_output = {"simple": 1024, "moderate": 2048, "complex": 2048}.get(
+            complexity, 2048
+        )
+        try:
+            response = await self._client.chat_completion(
+                [
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are executing the user's prompt exactly as "
+                            "written. Produce the complete, final result."
+                        ),
+                    },
+                    {"role": "user", "content": optimized_text},
+                ],
+                temperature=0.7,
+                max_tokens=max_output,
+            )
+            input_tokens = max(1, response.prompt_tokens)
+            output_tokens = max(1, response.completion_tokens)
+            return ExecutionEstimate(
+                input_tokens=input_tokens,
+                estimated_output_tokens=output_tokens,
+                total_estimated_tokens=input_tokens + output_tokens,
+                estimated_input_cost=self._calc.input_cost(input_tokens),
+                estimated_output_cost=self._calc.output_cost(output_tokens),
+                estimated_total_cost=round(
+                    self._calc.input_cost(input_tokens)
+                    + self._calc.output_cost(output_tokens),
+                    8,
+                ),
+            )
+        except Exception as exc:
+            logger.warning(
+                "Measured optimized execution failed — heuristic fallback: %s", exc
+            )
+            return self._estimator.estimate(
+                self._counter.count(optimized_text), complexity
+            )
+
     def _build_optimizer_analytics(
         self,
         *,
@@ -714,6 +791,7 @@ class OptimizationOrchestrator:
         optimization: OptimizationOutcome,
         optimized_prompt_tokens: int,
         estimated_execution_tokens: int,
+        execution_input_tokens: int,
         estimated_output_tokens: int,
     ) -> OptimizerAnalytics:
         """Aggregate token counts for the optimizer pipeline.
@@ -722,11 +800,15 @@ class OptimizationOrchestrator:
           Raw Prompt        = the user's original prompt text
           Skill Selection   = the call that picks the optimization skill
           Prompt Optimization = the call that rewrites the prompt
-          Estimated Execution = optimized prompt input + estimated output
+          Measured Execution = real input + output of one optimized run
                                 (what the target model consumes)
 
         Total Optimizer Tokens = Raw + Skill Selection + Prompt Optimization
-                                 + Estimated Execution.
+                                 + Measured Execution.
+
+        Cost uses ONLY real API usage: the skill-selection and optimization
+        calls already contain the raw prompt inside their measured inputs, so
+        it is NOT re-added (no double counting).
 
         Validation and prompt analysis are part of the manual workflow and are
         NOT counted in the optimizer total.
@@ -738,12 +820,9 @@ class OptimizationOrchestrator:
             raw_tokens + skill_tokens + optimization_tokens + estimated_execution_tokens
         )
 
-        # Cost — input/output for the components counted in the total
+        # Cost — input/output of the actual LLM calls counted in the total
         optimizer_input = (
-            raw_tokens
-            + selection.input_tokens
-            + optimization.input_tokens
-            + optimized_prompt_tokens
+            selection.input_tokens + optimization.input_tokens + execution_input_tokens
         )
         optimizer_output = (
             selection.output_tokens + optimization.output_tokens + estimated_output_tokens
@@ -753,7 +832,7 @@ class OptimizationOrchestrator:
         total_cost = round(total_input_cost + total_output_cost, 8)
 
         # Execution cost — target model consuming the final optimized prompt
-        exec_input_cost = self._calc.input_cost(optimized_prompt_tokens)
+        exec_input_cost = self._calc.input_cost(execution_input_tokens)
         exec_output_cost = self._calc.output_cost(estimated_output_tokens)
 
         self._log_tokens(

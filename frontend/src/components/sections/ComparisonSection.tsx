@@ -1,123 +1,95 @@
 // src/components/sections/ComparisonSection.tsx
 import React from 'react';
-import { ArrowLeftRight, TrendingDown, Coins, MessageSquare } from 'lucide-react';
+import { ArrowLeftRight, ArrowDownRight } from 'lucide-react';
 import type { ComparisonResult } from '../../types/optimizer';
+import { SectionHeading } from '../ui/SectionHeading';
+import { fmt, fmtMoney, fmtPct } from '../../utils/format';
 
 interface ComparisonSectionProps {
   comparison: ComparisonResult;
 }
 
-interface CompBarProps {
-  label: string;
-  value: number;
-  max: number;
-  color: string;
-  textColor: string;
-}
+const LaneChip: React.FC<{ label: string }> = ({ label }) => (
+  <span className="badge text-[#9AA4B2] border-[#232A36] bg-[#161C26]">{label}</span>
+);
 
-const CompBar: React.FC<CompBarProps> = ({ label, value, max, color, textColor }) => {
-  const pct = max > 0 ? (value / max) * 100 : 0;
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-slate-300">{label}</span>
-        <span className={`text-sm font-bold metric-number ${textColor}`}>{value.toLocaleString()}</span>
+export const ComparisonSection: React.FC<ComparisonSectionProps> = ({ comparison }) => (
+  <section id="comparison" className="section-card animate-slide-up">
+    <SectionHeading
+      icon={ArrowLeftRight}
+      title="Before vs After"
+      subtitle="What you'd spend doing it manually versus one optimized run"
+    />
+
+    {/* Lanes */}
+    <div className="grid lg:grid-cols-[1fr_auto_1fr] gap-4 mt-5 items-stretch">
+      {/* Manual */}
+      <div className="surface relative overflow-hidden p-6">
+        <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: 'linear-gradient(90deg,#C7912E,#E0A93B)' }} />
+        <p className="stat-label text-[#E8C079]">Manual Workflow</p>
+        <div className="mt-4 flex items-baseline gap-2">
+          <span className="stat-value-xl text-[#E8C079] metric-number">{fmt(comparison.manual_tokens)}</span>
+          <span className="text-xs text-[#6B7686]">tokens</span>
+        </div>
+        <div className="mt-5 flex flex-wrap gap-1.5">
+          {comparison.estimated_questions_required > 0 && (
+            <LaneChip label={`${comparison.estimated_questions_required} question rounds`} />
+          )}
+          <LaneChip label="answers" />
+          <LaneChip label="analysis" />
+          <LaneChip label="execution" />
+        </div>
       </div>
-      <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden">
-        <div
-          className={`comparison-bar h-full ${color}`}
-          style={{ width: `${pct}%` }}
-        />
+
+      {/* Center savings */}
+      <div className="flex flex-col items-center justify-center gap-2 px-2">
+        <div className="flex items-center justify-center w-11 h-11 rounded-full bg-[#2FB67B]/10 border border-[#2FB67B]/30">
+          <ArrowDownRight size={20} className="text-[#59C99A]" />
+        </div>
+        <span className="badge text-[#59C99A] border-[#2FB67B]/30 bg-[#2FB67B]/10">
+          -{fmtPct(comparison.percentage_reduction)} tokens
+        </span>
+        <span className="text-[0.7rem] text-[#6B7686]">saved</span>
+      </div>
+
+      {/* Optimizer */}
+      <div className="surface relative overflow-hidden p-6">
+        <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ background: 'linear-gradient(90deg,#4F7CFF,#7BA2FF)' }} />
+        <p className="stat-label text-[#8FB0FF]">Optimizer Pipeline</p>
+        <div className="mt-4 flex items-baseline gap-2">
+          <span className="stat-value-xl text-[#8FB0FF] metric-number">{fmt(comparison.optimizer_tokens)}</span>
+          <span className="text-xs text-[#6B7686]">tokens</span>
+        </div>
+        <div className="mt-5 flex flex-wrap gap-1.5">
+          <LaneChip label="raw prompt" />
+          <LaneChip label="skill selection" />
+          <LaneChip label="optimization" />
+          <LaneChip label="execution" />
+        </div>
       </div>
     </div>
-  );
-};
 
-export const ComparisonSection: React.FC<ComparisonSectionProps> = ({ comparison }) => {
-  const maxTokens = Math.max(comparison.manual_tokens, comparison.optimizer_tokens);
-
-  return (
-    <section id="comparison" className="section-card glass border border-white/5 animate-slide-up">
-      <div className="flex items-center gap-2.5 mb-5">
-        <div className="p-2 rounded-lg bg-rose-500/10">
-          <ArrowLeftRight size={16} className="text-rose-400" />
-        </div>
-        <div>
-          <h2 className="text-sm font-semibold text-white">Comparison Dashboard</h2>
-          <p className="text-xs text-slate-500">Phase 10 — Manual workflow vs Optimizer total</p>
-        </div>
+    {/* Cost summary */}
+    <div className="grid sm:grid-cols-3 gap-4 mt-4">
+      <div className="surface p-4 text-center">
+        <p className="stat-label mb-2">Manual Cost</p>
+        <p className="stat-value-lg text-[#E8C079] metric-number">{fmtMoney(comparison.manual_cost)}</p>
       </div>
-
-      {/* Token comparison bars */}
-      <div className="space-y-4 mb-6">
-        <CompBar
-          label="Manual Workflow Tokens"
-          value={comparison.manual_tokens}
-          max={maxTokens}
-          color="bg-gradient-to-r from-amber-500 to-orange-500"
-          textColor="text-amber-300"
-        />
-        <CompBar
-          label="Optimizer Total Tokens"
-          value={comparison.optimizer_tokens}
-          max={maxTokens}
-          color="bg-gradient-to-r from-indigo-500 to-cyan-500"
-          textColor="text-indigo-300"
-        />
+      <div className="surface relative overflow-hidden p-4 text-center border border-[#2FB67B]/25">
+        <p className="stat-label mb-2 text-[#59C99A]">Estimated Savings</p>
+        <p className="stat-value-lg text-[#59C99A] metric-number">{fmtMoney(comparison.estimated_cost_saved)}</p>
       </div>
-
-      <div className="mb-4 p-2.5 rounded-lg bg-white/5 border border-white/10 text-[11px] text-slate-400">
-        Optimizer total = raw prompt + skill selection + prompt optimization +
-        estimated execution. Manual total includes raw prompt + decision making +
-        questions + answers + execution + answer analysis.
+      <div className="surface p-4 text-center">
+        <p className="stat-label mb-2">Optimizer Cost</p>
+        <p className="stat-value-lg text-[#8FB0FF] metric-number">{fmtMoney(comparison.optimizer_cost)}</p>
       </div>
+    </div>
 
-      {/* Stat grid */}
-      <div className="grid grid-cols-2 gap-3 mb-4 stagger-children">
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/15 to-emerald-500/5 border border-emerald-500/20 text-center">
-          <TrendingDown size={18} className="text-emerald-400 mx-auto mb-1.5" />
-          <p className="text-2xl font-black text-emerald-300 metric-number">
-            {comparison.percentage_reduction.toFixed(1)}%
-          </p>
-          <p className="text-xs text-slate-400 mt-1">Token Reduction</p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-500/15 to-cyan-500/5 border border-cyan-500/20 text-center">
-          <Coins size={18} className="text-cyan-400 mx-auto mb-1.5" />
-          <p className="text-2xl font-black text-cyan-300 metric-number">
-            ${comparison.estimated_cost_saved.toFixed(6)}
-          </p>
-          <p className="text-xs text-slate-400 mt-1">Cost Saved</p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-indigo-500/5 border border-indigo-500/20 text-center">
-          <ArrowLeftRight size={18} className="text-indigo-400 mx-auto mb-1.5" />
-          <p className="text-2xl font-black text-indigo-300 metric-number">
-            {comparison.tokens_saved.toLocaleString()}
-          </p>
-          <p className="text-xs text-slate-400 mt-1">Tokens Saved</p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-rose-500/15 to-rose-500/5 border border-rose-500/20 text-center">
-          <MessageSquare size={18} className="text-rose-400 mx-auto mb-1.5" />
-          <p className="text-2xl font-black text-rose-300 metric-number">
-            {comparison.estimated_questions_required}
-          </p>
-          <p className="text-xs text-slate-400 mt-1">Questions Eliminated</p>
-        </div>
-      </div>
-
-      {/* Cost comparison */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/15 text-center">
-          <p className="text-[10px] text-amber-400 mb-1">Manual Cost</p>
-          <p className="text-base font-bold text-amber-300">${comparison.manual_cost.toFixed(6)}</p>
-        </div>
-        <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/15 text-center">
-          <p className="text-[10px] text-indigo-400 mb-1">Optimizer Cost</p>
-          <p className="text-base font-bold text-indigo-300">${comparison.optimizer_cost.toFixed(6)}</p>
-        </div>
-      </div>
-    </section>
-  );
-};
+    <p className="text-[11px] text-[#6B7686] mt-5 leading-relaxed">
+      Optimizer total = raw prompt + skill selection + prompt optimization + estimated
+      execution. Manual total = raw prompt + decision making + questions + user answers +
+      execution + answer analysis. Savings are the difference, priced at the model's
+      per-1K-token rates.
+    </p>
+  </section>
+);

@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
 from app.core.logging import setup_logging, get_logger
 from app.api.routes.optimize import router as optimize_router
+from app.api.routes.meta import router as meta_router
 
 setup_logging("INFO")
 logger = get_logger(__name__)
@@ -48,6 +49,7 @@ app.add_middleware(
 
 # Routers
 app.include_router(optimize_router, prefix=settings.API_V1_PREFIX)
+app.include_router(meta_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/health", tags=["Health"])

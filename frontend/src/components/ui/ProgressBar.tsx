@@ -2,41 +2,40 @@
 import React from 'react';
 
 interface ProgressBarProps {
-  value: number;      // 0–100
-  max?: number;
+  value: number;      // raw value
+  max?: number;       // scale (default 100)
   label?: string;
-  color?: 'indigo' | 'cyan' | 'emerald' | 'amber' | 'rose';
+  tone?: 'accent' | 'emerald' | 'amber' | 'rose' | 'neutral';
   showValue?: boolean;
-  animated?: boolean;
+  suffix?: string;
 }
 
-const colorMap = {
-  indigo:  'from-indigo-500 to-indigo-400',
-  cyan:    'from-cyan-500 to-cyan-400',
-  emerald: 'from-emerald-500 to-emerald-400',
-  amber:   'from-amber-500 to-amber-400',
-  rose:    'from-rose-500 to-rose-400',
+const fillMap = {
+  accent:  'linear-gradient(90deg, #4F7CFF, #7BA2FF)',
+  emerald: 'linear-gradient(90deg, #1E9B64, #2FB67B)',
+  amber:   'linear-gradient(90deg, #C7912E, #E0A93B)',
+  rose:    'linear-gradient(90deg, #C54B63, #E5677E)',
+  neutral: 'linear-gradient(90deg, #3A4659, #546179)',
 };
 
 export const ProgressBar: React.FC<ProgressBarProps> = ({
-  value, max = 100, label, color = 'indigo', showValue = true, animated = true,
+  value, max = 100, label, tone = 'accent', showValue = true, suffix = '',
 }) => {
   const pct = Math.min(100, Math.max(0, (value / max) * 100));
   return (
     <div className="w-full">
       {(label || showValue) && (
         <div className="flex justify-between items-center mb-1.5">
-          {label && <span className="text-xs text-slate-400">{label}</span>}
+          {label && <span className="text-[0.8rem] text-[#9AA4B2]">{label}</span>}
           {showValue && (
-            <span className="text-xs font-semibold text-slate-300">{value.toFixed(1)}{max === 100 ? '%' : ''}</span>
+            <span className="text-[0.8rem] font-semibold text-[#E6EAF2] metric-number">
+              {value.toFixed(1)}{suffix || (max === 100 ? '%' : '')}
+            </span>
           )}
         </div>
       )}
-      <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full bg-gradient-to-r ${colorMap[color]} ${animated ? 'progress-bar-fill' : ''}`}
-          style={{ width: `${pct}%` }}
-        />
+      <div className="track">
+        <div className="track-fill" style={{ width: `${pct}%`, background: fillMap[tone] }} />
       </div>
     </div>
   );

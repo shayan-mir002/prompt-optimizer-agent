@@ -27,12 +27,12 @@ class Settings(BaseSettings):
     # ── AI Provider (OpenAI-compatible chat completions API) ─────────────────
     API_KEY: str = _EMBEDDED_API_KEY
     API_BASE_URL: str = "https://api.groq.com/openai/v1"
-    API_MODEL: str = "llama-3.3-70b-versatile"
+    API_MODEL: str = "openai/gpt-oss-120b"
 
-    # ── Pricing (llama-3.3-70b-versatile @ Groq, per 1 000 tokens) ───────────
-    INPUT_COST_PER_1K: float = 0.00059         # $0.59  / 1 M input tokens
-    OUTPUT_COST_PER_1K: float = 0.00079        # $0.79  / 1 M output tokens
-    CACHED_INPUT_COST_PER_1K: float = 0.00059  # conservative — no cache estimate
+    # ── Pricing (openai/gpt-oss-120b @ Groq, per 1 000 tokens) ───────────────
+    INPUT_COST_PER_1K: float = 0.00015         # $0.15  / 1 M input tokens
+    OUTPUT_COST_PER_1K: float = 0.00060        # $0.60  / 1 M output tokens
+    CACHED_INPUT_COST_PER_1K: float = 0.00015  # conservative — no cache estimate
 
     # ── Skills directory (absolute path resolved at runtime) ──────────────────
     SKILLS_DIR: str = str(BASE_DIR / "skills")

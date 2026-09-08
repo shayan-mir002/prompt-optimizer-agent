@@ -16,9 +16,25 @@ logger = get_logger(__name__)
 
 # Transient status codes worth retrying (gateway timeouts, overload, rate limits)
 _RETRYABLE_STATUS = {429, 500, 502, 503, 504}
-_RETRY_ATTEMPTS = 4
-_RETRY_BASE_DELAY = 3.0
-_RETRY_MAX_DELAY = 20.0
+# Optimal: enough attempts to ride-out a short rate-limit burst without stalling
+# the whole pipeline on a hard failure. Respects Retry-After when present.
+_RETRY_ATTEMPTS = 5
+_RETRY_BASE_DELAY = 1.5
+_RETRY_MAX_DELAY = 12.0
+_RETRY_BACKOFF = 2.0
+
+
+def _retry_delay(attempt: int, response) -> float:
+    """Respect the server-sent Retry-After header; otherwise exponential backoff."""
+    if response is not None:
+        retry_after = response.headers.get("Retry-After")
+        if retry_after:
+            try:
+                seconds = float(retry_after)
+                return min(max(seconds, 0.5), _RETRY_MAX_DELAY)
+            except (TypeError, ValueError):
+                pass
+    return min(_RETRY_BASE_DELAY * (_RETRY_BACKOFF ** (attempt - 1)), _RETRY_MAX_DELAY)
 
 
 @dataclass
@@ -95,9 +111,9 @@ class BluesmindClient:
                         raise
 
                 if attempt < _RETRY_ATTEMPTS:
-                    delay = min(_RETRY_BASE_DELAY * (2 ** (attempt - 1)), _RETRY_MAX_DELAY)
                     resp = getattr(last_error, "response", None)
                     reason = resp.status_code if resp is not None else type(last_error).__name__
+                    delay = _retry_delay(attempt, resp)
                     logger.warning(
                         "LLM call attempt %d/%d failed (%s) — retrying in %.1fs",
                         attempt, _RETRY_ATTEMPTS, reason, delay,
@@ -208,8 +224,9 @@ class BluesmindClient:
                     if status is not None and status not in _RETRYABLE_STATUS:
                         raise
                     if attempt < _RETRY_ATTEMPTS:
-                        delay = min(_RETRY_BASE_DELAY * (2 ** (attempt - 1)), _RETRY_MAX_DELAY)
+                        resp = getattr(exc, "response", None)
                         reason = status if status is not None else type(exc).__name__
+                        delay = _retry_delay(attempt, resp)
                         logger.warning(
                             "LLM stream attempt %d/%d failed (%s) — retrying in %.1fs",
                             attempt, _RETRY_ATTEMPTS, reason, delay,

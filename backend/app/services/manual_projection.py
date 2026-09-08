@@ -21,10 +21,23 @@ logger = get_logger(__name__)
 # Average estimated answer length per question (tokens)
 AVG_ANSWER_TOKENS_PER_QUESTION = 75
 
-# Manual execution is less efficient: manual prompts consume more output tokens.
-MANUAL_EXECUTION_MULTIPLIER = 1.8
+# Heuristic input fraction of a call whose input/output split is unknown.
+# Used ONLY when the real simulator did not run (it normally does).
+_CALL_INPUT_FRACTION = 0.7
 
-# Manual execution output multiplier per complexity level
+# Manual execution output size per question round (tokens), by complexity —
+# each round produces an updated draft of the deliverable.
+_EXECUTION_OUTPUT_PER_QUESTION = {
+    "simple": 150,
+    "moderate": 250,
+    "complex": 350,
+}
+
+# Fixed per-round overhead (system prompt + formatting) in tokens.
+_EXECUTION_ROUND_OVERHEAD = 120
+
+# Single-run execution output multiplier per complexity level
+# (used only when there were NO clarification questions).
 _EXECUTION_MULTIPLIERS = {
     "simple": 3.0,
     "moderate": 6.0,
@@ -63,6 +76,8 @@ class ManualProjection:
         question_generation_tokens: int,
         analysis: AnalysisOutcome,
         sim: Optional[ManualSimulationOutcome] = None,
+        question_generation_input_tokens: int = 0,
+        question_generation_output_tokens: int = 0,
     ) -> ManualProjectionOutcome:
 
         # 1) Raw prompt tokens
@@ -80,23 +95,36 @@ class ManualProjection:
         else:
             estimated_answer_tokens = num_questions * AVG_ANSWER_TOKENS_PER_QUESTION
 
-        # 5) Number of tokens to execute the answers
-        # (The manual run: raw prompt + answers executed against the LLM.
-        #  Prefer the REAL measured tokens; fall back to a formula otherwise.
-        #  Never allowed to drop below the question-generation tokens.)
+        # 5) Total tokens to execute ALL the questions.
+        # In the manual workflow each clarification answer is incorporated by
+        # re-running the task, so execution is the SUM over every question:
+        # each round re-reads the prompt plus the accumulated Q&A (growing
+        # input) and emits an updated result (output). Prefer the REAL measured
+        # sum from the simulator; otherwise fall back to a closed-form estimate.
         if sim is not None and sim.execution_tokens is not None:
-            execution_base = sim.execution_tokens
-        else:
+            estimated_execution_tokens = max(100, sim.execution_tokens)
+        elif num_questions <= 0:
             multiplier = _EXECUTION_MULTIPLIERS.get(analysis.complexity, 6.0)
-            execution_base = max(
-                200,
-                int((raw_prompt_tokens + estimated_answer_tokens) * multiplier),
+            estimated_execution_tokens = max(
+                100, int(raw_prompt_tokens * (1.0 + multiplier))
             )
-        estimated_execution_tokens = max(
-            300,
-            question_generation_tokens,
-            execution_base,
-        )
+        else:
+            avg_answer = (
+                sim.answer_tokens // num_questions
+                if sim is not None and sim.answer_tokens and num_questions > 0
+                else AVG_ANSWER_TOKENS_PER_QUESTION
+            )
+            output_per_q = _EXECUTION_OUTPUT_PER_QUESTION.get(analysis.complexity, 250)
+            # Round i reads the prompt + i answers + fixed overhead (growing input)
+            cumulative_inputs = (
+                num_questions * raw_prompt_tokens
+                + avg_answer * num_questions * (num_questions + 1) // 2
+                + num_questions * _EXECUTION_ROUND_OVERHEAD
+            )
+            cumulative_outputs = num_questions * output_per_q
+            estimated_execution_tokens = max(
+                100, cumulative_inputs + cumulative_outputs
+            )
 
         # 6) Number of tokens to analyze the user answers (simulated)
         # (REAL LLM measurement when available, otherwise a reading estimate)
@@ -120,17 +148,50 @@ class ManualProjection:
             + estimated_answer_analysis_tokens
         )
 
-        # Cost calculation (manual execution only)
-        # Inputs: raw prompt + the user's answers + decision making (reading)
-        input_tokens = (
-            raw_prompt_tokens + estimated_answer_tokens + decision_making_tokens
-        )
-        # Outputs: generated questions + final execution output + answer analysis
-        output_tokens = (
-            question_generation_tokens
-            + estimated_execution_tokens
-            + estimated_answer_analysis_tokens
-        )
+        # Cost calculation — REAL LLM usage when available, otherwise the SAME
+        # estimate that produced the token figure above, so the cost and the
+        # token total always agree. The prompt text is NOT added as a separate
+        # line item because it is already inside every call's measured tokens.
+        decision_input = analysis.input_tokens
+        decision_output = analysis.output_tokens
+
+        if sim is not None and (
+            sim.answers_input_tokens is not None and sim.answers_output_tokens is not None
+        ):
+            ans_in, ans_out = sim.answers_input_tokens, sim.answers_output_tokens
+        else:
+            ans_in, ans_out = 0, estimated_answer_tokens
+
+        if sim is not None and (
+            sim.execution_input_tokens is not None
+            and sim.execution_output_tokens is not None
+        ):
+            exec_in, exec_out = sim.execution_input_tokens, sim.execution_output_tokens
+        else:
+            exec_in = int(estimated_execution_tokens * _CALL_INPUT_FRACTION)
+            exec_out = estimated_execution_tokens - exec_in
+
+        if sim is not None and (
+            sim.answer_analysis_input_tokens is not None
+            and sim.answer_analysis_output_tokens is not None
+        ):
+            anl_in, anl_out = (
+                sim.answer_analysis_input_tokens,
+                sim.answer_analysis_output_tokens,
+            )
+        else:
+            anl_in = int(estimated_answer_analysis_tokens * _CALL_INPUT_FRACTION)
+            anl_out = estimated_answer_analysis_tokens - anl_in
+
+        if (question_generation_input_tokens or question_generation_output_tokens) > 0:
+            qg_in = max(0, question_generation_input_tokens)
+            qg_out = max(0, question_generation_output_tokens)
+        else:
+            qg_in = int(question_generation_tokens * _CALL_INPUT_FRACTION)
+            qg_out = question_generation_tokens - qg_in
+
+        input_tokens = decision_input + qg_in + ans_in + exec_in + anl_in
+        output_tokens = decision_output + qg_out + ans_out + exec_out + anl_out
 
         input_cost = self._calc.input_cost(input_tokens)
         output_cost = self._calc.output_cost(output_tokens)

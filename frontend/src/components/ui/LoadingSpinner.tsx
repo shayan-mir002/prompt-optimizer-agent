@@ -1,28 +1,31 @@
 // src/components/ui/LoadingSpinner.tsx
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 
 interface LoadingSpinnerProps {
   stage: 'analyze' | 'optimize';
 }
 
-const STAGES: Record<'analyze' | 'optimize', { title: string; phases: string[] }> = {
+const STAGES: Record<'analyze' | 'optimize', { title: string; subtitle: string; phases: string[] }> = {
   analyze: {
-    title: 'Stage 1 — Pre-Optimization Analysis',
+    title: 'Analyzing your prompt',
+    subtitle: 'Step 1 of 2 — Pre-optimization analysis',
     phases: [
       'Counting raw prompt tokens...',
       'Validating the prompt...',
-      'Analyzing clarity & intent...',
+      'Analyzing clarity and intent...',
       'Deciding how many questions are required...',
-      'Generating the clarification questions...',
-      'Projecting before-optimization tokens & cost...',
+      'Generating clarification questions...',
+      'Projecting before-optimization tokens and cost...',
     ],
   },
   optimize: {
-    title: 'Stage 2 — Optimization',
+    title: 'Optimizing your prompt',
+    subtitle: 'Step 2 of 2 — Optimization',
     phases: [
       'Selecting the best skill framework...',
       'Generating the optimized prompt...',
-      'Estimating execution tokens & cost...',
+      'Estimating execution tokens and cost...',
       'Calculating after-optimization analytics...',
       'Comparing before vs after...',
       'Assembling the final report...',
@@ -32,13 +35,13 @@ const STAGES: Record<'analyze' | 'optimize', { title: string; phases: string[] }
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ stage }) => {
   const [phaseIdx, setPhaseIdx] = React.useState(0);
-  const { title, phases } = STAGES[stage];
+  const { title, subtitle, phases } = STAGES[stage];
 
   React.useEffect(() => {
     setPhaseIdx(0);
     const interval = setInterval(() => {
       setPhaseIdx(prev => (prev + 1) % phases.length);
-    }, 2200);
+    }, 1800);
     return () => clearInterval(interval);
   }, [stage, phases.length]);
 
@@ -46,38 +49,25 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ stage }) => {
 
   return (
     <div className="flex flex-col items-center justify-center py-24 px-8 animate-fade-in">
-      {/* Orbital spinner */}
-      <div className="relative w-24 h-24 mb-8">
-        <div className="absolute inset-0 rounded-full border-2 border-indigo-500/20" />
-        <div className="absolute inset-0 rounded-full border-t-2 border-indigo-400 animate-spin" style={{ animationDuration: '1s' }} />
-        <div className="absolute inset-3 rounded-full border-2 border-cyan-500/20" />
-        <div className="absolute inset-3 rounded-full border-b-2 border-cyan-400 animate-spin" style={{ animationDuration: '1.5s', animationDirection: 'reverse' }} />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 animate-pulse-slow" />
+      <div className="surface px-8 py-7 flex flex-col items-center max-w-md w-full">
+        <div className="relative w-12 h-12 mb-5">
+          <Loader2 size={48} className="text-[#4F7CFF] animate-spin" strokeWidth={1.5} />
         </div>
-      </div>
+        <p className="text-sm font-semibold text-[#6B7686] uppercase tracking-wider mb-2">{subtitle}</p>
+        <h3 className="text-lg font-bold text-[#E6EAF2] mb-2">{title}</h3>
+        <p className="text-sm text-[#9AA4B2] mb-6 text-center h-5">{phase}</p>
 
-      {/* Phase indicator */}
-      <div className="text-center max-w-sm">
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <span className="tag-pill bg-indigo-500/15 text-indigo-300 border border-indigo-500/25">
-            {stage === 'analyze' ? 'Step 1 of 2' : 'Step 2 of 2'}
-          </span>
+        {/* Phase dots */}
+        <div className="flex gap-1.5">
+          {phases.map((_, i) => (
+            <div
+              key={i}
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                i <= phaseIdx ? 'bg-[#4F7CFF] scale-110' : 'bg-[#232A36]'
+              }`}
+            />
+          ))}
         </div>
-        <p className="text-lg font-semibold text-white mb-2">{phase}</p>
-        <p className="text-sm text-slate-500">{title}</p>
-      </div>
-
-      {/* Mini phase dots */}
-      <div className="flex gap-1.5 mt-8">
-        {phases.map((_, i) => (
-          <div
-            key={i}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              i <= phaseIdx ? 'bg-indigo-400 scale-110' : 'bg-white/10'
-            }`}
-          />
-        ))}
       </div>
     </div>
   );

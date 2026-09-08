@@ -1,11 +1,13 @@
 // src/components/sections/PreOptimizationView.tsx
 import React from 'react';
-import { SearchCheck, AlertTriangle, Sparkles, ArrowRight, RotateCcw } from 'lucide-react';
+import { SearchCheck, AlertTriangle, Sparkles, RotateCcw, CheckCircle2 } from 'lucide-react';
 import type { PreOptimizationResponse } from '../../types/optimizer';
 import { RawPromptSection } from './RawPromptSection';
 import { AnalysisSection } from './AnalysisSection';
 import { ClarificationSection } from './ClarificationSection';
 import { ManualWorkflowSection } from './ManualWorkflowSection';
+import { Badge } from '../ui/Badge';
+import { fmt, fmtMoney } from '../../utils/format';
 
 interface PreOptimizationViewProps {
   pre: PreOptimizationResponse;
@@ -21,25 +23,67 @@ export const PreOptimizationView: React.FC<PreOptimizationViewProps> = ({
   if (!pre.validation.is_valid) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-12 animate-fade-in">
-        <div className="glass rounded-2xl border border-rose-500/20 p-6">
+        <div className="surface border border-[#E5677E]/20 p-6">
           <div className="flex items-center gap-2.5 mb-4">
-            <AlertTriangle size={18} className="text-rose-400" />
-            <h2 className="text-base font-semibold text-white">Prompt Validation Failed</h2>
+            <AlertTriangle size={18} className="text-[#F09AA8]" />
+            <h2 className="text-base font-semibold text-[#E6EAF2]">Prompt Validation Failed</h2>
           </div>
           <ul className="space-y-2 mb-5">
             {pre.validation.errors.map((e, i) => (
-              <li key={i} className="text-sm text-rose-300 flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-400 mt-1.5 shrink-0" />
+              <li key={i} className="text-sm text-[#F09AA8] flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E5677E] mt-1.5 shrink-0" />
                 {e}
               </li>
             ))}
           </ul>
           <button
             onClick={onBack}
-            className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-slate-300 transition-colors"
+            className="btn-secondary flex items-center gap-1.5 px-4 py-2 text-sm"
           >
-            ← Back to Input
+            <RotateCcw size={13} />
+            Back to Input
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // The prompt is already clear — optimization would add nothing.
+  if (pre.prompt_is_clear) {
+    return (
+      <div className="space-y-5 animate-fade-in">
+        <div className="section-card border border-[#2FB67B]/30">
+          <div className="flex flex-col items-center text-center py-4">
+            <div className="p-3 rounded-full bg-[#2FB67B]/10 border border-[#2FB67B]/30 mb-4">
+              <CheckCircle2 size={26} className="text-[#59C99A]" />
+            </div>
+            <p className="text-[10px] font-bold text-[#59C99A] uppercase tracking-widest mb-2">
+              Step 1 of 2 — Analysis Complete
+            </p>
+            <h2 className="text-xl font-bold text-[#E6EAF2] mb-2">
+              This prompt doesn't need optimization
+            </h2>
+            <p className="text-sm text-[#9AA4B2] max-w-md text-center leading-relaxed">
+              {pre.analysis
+                ? `It's already clear and complete — ${pre.analysis.ambiguity_level} ambiguity, ` +
+                  `quality ${pre.analysis.quality_score}/10, completeness ${pre.analysis.completeness_score}%. ` +
+                  'No clarification questions are required.'
+                : 'The prompt is sufficiently clear — no clarification questions are required.'}
+            </p>
+            <div className="flex items-center gap-3 mt-6">
+              <Badge label={`${pre.raw_prompt_tokens} raw tokens`} tone="emerald" />
+              {pre.manual_projection && (
+                <Badge label={`${fmt(pre.manual_projection.total_estimated_manual_tokens)} projected manual tokens`} tone="neutral" />
+              )}
+            </div>
+            <button
+              onClick={onBack}
+              className="btn-secondary flex items-center gap-1.5 px-5 py-2.5 text-sm mt-6"
+            >
+              <RotateCcw size={13} />
+              Analyze Another Prompt
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -48,28 +92,24 @@ export const PreOptimizationView: React.FC<PreOptimizationViewProps> = ({
   return (
     <div className="space-y-5 animate-fade-in">
       {/* Step banner */}
-      <div className="section-card glass border border-indigo-500/20 animate-slide-up">
+      <div className="section-card animate-slide-up">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-indigo-500/15">
-            <SearchCheck size={18} className="text-indigo-400" />
+          <div className="p-2.5 rounded-xl bg-[#4F7CFF]/10 border border-[#4F7CFF]/25">
+            <SearchCheck size={18} className="text-[#7BA2FF]" />
           </div>
           <div className="flex-1">
-            <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-0.5">
+            <p className="text-[10px] font-bold text-[#7BA2FF] uppercase tracking-widest mb-0.5">
               Step 1 of 2 — Analysis Complete
             </p>
-            <h2 className="text-sm font-semibold text-white">
-              {pre.prompt_is_clear
-                ? 'Your prompt is sufficiently clear — no clarification questions needed.'
-                : 'The prompt lacks clarity — here is what the AI needs to know.'}
+            <h2 className="text-sm font-semibold text-[#E6EAF2]">
+              The prompt lacks clarity — here is what the AI needs to know.
             </h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-[#6B7686] mt-1">
               The full pipeline has NOT been run yet. Review the projected manual
               token usage below before proceeding to the optimizer.
             </p>
           </div>
-          <span className="tag-pill bg-indigo-500/15 text-indigo-300 border border-indigo-500/25 shrink-0">
-            {pre.raw_prompt_tokens} raw tokens
-          </span>
+          <Badge label={`${pre.raw_prompt_tokens} raw tokens`} tone="neutral" />
         </div>
       </div>
 
@@ -84,23 +124,23 @@ export const PreOptimizationView: React.FC<PreOptimizationViewProps> = ({
       )}
 
       {/* Before-optimization total + CTA */}
-      <div className="section-card glass-strong border border-indigo-500/20 animate-slide-up">
+      <div className="section-card animate-slide-up">
         <div className="text-center mb-5">
-          <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-2">
+          <p className="stat-label mb-2">
             Total Before Prompt Is Optimized
           </p>
           {pre.manual_projection && (
             <>
-              <p className="text-3xl font-black gradient-text metric-number mb-1">
-                {pre.manual_projection.total_estimated_manual_tokens.toLocaleString()} tokens
+              <p className="stat-value-lg text-[#8FB0FF] metric-number mb-1">
+                {fmt(pre.manual_projection.total_estimated_manual_tokens)} tokens
               </p>
-              <p className="text-xs text-slate-500">
-                ≈ ${pre.manual_projection.estimated_manual_cost.toFixed(6)} · if done manually
+              <p className="text-xs text-[#6B7686]">
+                ≈ {fmtMoney(pre.manual_projection.estimated_manual_cost)} · if done manually
               </p>
             </>
           )}
-          <p className="text-xs text-slate-400 italic mt-3 max-w-lg mx-auto font-sans">
-            💡 {pre.note}
+          <p className="text-xs text-[#6B7686] italic mt-3 max-w-lg mx-auto">
+            {pre.note}
           </p>
         </div>
 
@@ -108,20 +148,16 @@ export const PreOptimizationView: React.FC<PreOptimizationViewProps> = ({
           <button
             onClick={onProceed}
             disabled={loading}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200
-              ${loading
-                ? 'bg-white/5 text-slate-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white hover:from-indigo-500 hover:to-cyan-500 glow-indigo hover:scale-[1.02]'
-              }`}
+            className={`btn-primary flex items-center gap-2 px-6 py-3 text-sm font-semibold transition-all duration-200
+              ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <Sparkles size={15} />
             {loading ? 'Optimizing...' : 'Proceed to Optimize'}
-            <ArrowRight size={14} />
           </button>
           <button
             onClick={onBack}
             disabled={loading}
-            className="flex items-center gap-1.5 px-4 py-3 rounded-xl text-sm text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
+            className="btn-secondary flex items-center gap-1.5 px-4 py-3 text-sm"
           >
             <RotateCcw size={13} />
             Back to Input

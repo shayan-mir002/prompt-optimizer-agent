@@ -39,6 +39,10 @@ class ClarificationResult(BaseModel):
     question_count_tokens: int        # LLM tokens used to plan the number of questions
     question_text_tokens: int         # LLM tokens used to write the questions
     question_generation_tokens: int   # count + text tokens (total question phase)
+    question_count_input_tokens: int = 0    # input portion of count call
+    question_count_output_tokens: int = 0   # output portion of count call
+    question_text_input_tokens: int = 0     # input portion of generation call
+    question_text_output_tokens: int = 0    # output portion of generation call
     num_questions: int
     estimated_answer_tokens: int      # estimated (75 tokens × num_questions)
     estimated_combined_prompt_tokens: int   # estimated

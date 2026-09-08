@@ -1,15 +1,36 @@
 // src/components/sections/OptimizedPromptSection.tsx
 import React, { useState, useCallback } from 'react';
-import { Wand2, Copy, Check, Hash, Layers, Zap } from 'lucide-react';
-import type { OptimizedPromptResult, SkillResult } from '../../types/optimizer';
+import { Wand2, Copy, Check, FileText, ScanSearch, Layers, Zap, Sigma } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { OptimizedPromptResult, SkillResult, OptimizerAnalytics } from '../../types/optimizer';
+import { SectionHeading } from '../ui/SectionHeading';
+import { fmt, fmtMoney } from '../../utils/format';
 
 interface OptimizedPromptSectionProps {
   optimizedPrompt: OptimizedPromptResult;
   skill: SkillResult;
+  analytics?: OptimizerAnalytics;
 }
 
+const StatTile: React.FC<{
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  sub: string;
+  valueClass?: string;
+}> = ({ icon: Icon, label, value, sub, valueClass }) => (
+  <div className="surface p-4">
+    <div className="flex items-center gap-1.5 mb-1.5">
+      <Icon size={13} className="text-[#6B7686]" />
+      <p className="stat-label">{label}</p>
+    </div>
+    <p className={`stat-value-lg metric-number ${valueClass ?? 'text-[#C6CDD9]'}`}>{value}</p>
+    <p className="text-[11px] text-[#6B7686] mt-1">{sub}</p>
+  </div>
+);
+
 export const OptimizedPromptSection: React.FC<OptimizedPromptSectionProps> = ({
-  optimizedPrompt, skill,
+  optimizedPrompt, skill, analytics,
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -19,7 +40,6 @@ export const OptimizedPromptSection: React.FC<OptimizedPromptSectionProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for browsers without clipboard API
       const el = document.createElement('textarea');
       el.value = optimizedPrompt.text;
       document.body.appendChild(el);
@@ -33,86 +53,90 @@ export const OptimizedPromptSection: React.FC<OptimizedPromptSectionProps> = ({
 
   return (
     <section id="optimized-prompt" className="animate-slide-up">
-      <div className="gradient-border-vivid rounded-2xl glow-prompt">
-        {/* Inner vivid gradient frame */}
-        <div className="rounded-2xl p-[1px] bg-gradient-to-br from-violet-600 via-fuchsia-600 to-cyan-500">
-          <div className="relative rounded-2xl overflow-hidden bg-[#0B1022]">
-            {/* Colorful glow blobs */}
-            <div className="pointer-events-none absolute -top-28 -right-20 w-80 h-80 rounded-full bg-fuchsia-500/40 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-28 -left-20 w-80 h-80 rounded-full bg-cyan-500/35 blur-3xl" />
-            <div className="pointer-events-none absolute top-1/3 left-1/2 w-56 h-56 rounded-full bg-violet-500/35 blur-3xl" />
-            {/* Shine sweep */}
-            <div className="pointer-events-none absolute inset-0 shine-sweep" />
-
-            <div className="relative p-5">
-              {/* Header */}
-              <div className="flex items-center justify-between gap-3 mb-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-amber-400 shadow-lg shadow-fuchsia-500/40">
-                    <Wand2 size={18} className="text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-extrabold gradient-text-vivid leading-tight">
-                      Optimized Prompt
-                    </h2>
-                    <p className="text-xs text-slate-400">
-                      Phase 6 · {skill.name} Framework · {skill.full_name}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  id="copy-optimized-prompt"
-                  onClick={handleCopy}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 shrink-0 ${
-                    copied
-                      ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
-                      : 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-400 hover:to-fuchsia-400 hover:scale-[1.03] shadow-lg shadow-fuchsia-500/30'
-                  }`}
-                >
-                  {copied ? <Check size={15} /> : <Copy size={15} />}
-                  {copied ? 'Copied!' : 'Copy Prompt'}
-                </button>
-              </div>
-
-              {/* Terminal panel */}
-              <div className="rounded-xl border border-white/15 overflow-hidden shadow-2xl shadow-fuchsia-500/10 bg-black/30 backdrop-blur-sm">
-                {/* Rainbow title bar */}
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-cyan-600">
-                  <span className="w-3 h-3 rounded-full bg-white/40" />
-                  <span className="w-3 h-3 rounded-full bg-white/40" />
-                  <span className="w-3 h-3 rounded-full bg-white/40" />
-                  <span className="ml-2 text-xs font-mono font-semibold text-white">
-                    optimized-prompt.txt
-                  </span>
-                  <span className="ml-auto flex items-center gap-1.5 text-[11px] text-white font-semibold uppercase tracking-wider">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                    ready to use
-                  </span>
-                </div>
-                <div className="p-5">
-                  <pre className="optimized-prompt-text">{optimizedPrompt.text}</pre>
-                </div>
-              </div>
-
-              {/* Token breakdown chips */}
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-400/30 text-xs font-semibold text-violet-200">
-                  <Hash size={12} />
-                  {optimizedPrompt.tokens.toLocaleString()} prompt tokens
-                </span>
-                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-fuchsia-500/20 border border-fuchsia-400/30 text-xs font-semibold text-fuchsia-200">
-                  <Layers size={12} />
-                  {optimizedPrompt.optimization_tokens_used.toLocaleString()} LLM tokens consumed
-                </span>
-                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/20 border border-cyan-400/30 text-xs font-semibold text-cyan-200">
-                  <Zap size={12} />
-                  Ready to paste into any AI chat interface
-                </span>
-              </div>
-            </div>
-          </div>
+      {/* Header row */}
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+        <SectionHeading
+          icon={Wand2}
+          title="Optimized Prompt"
+          subtitle={`Ready to paste into any AI — built with the ${skill.name} framework`}
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="badge text-[#8FB0FF] border-[#4F7CFF]/30 bg-[#4F7CFF]/10">
+            <Wand2 size={11} />
+            {skill.name}
+          </span>
+          <button
+            id="copy-optimized-prompt"
+            onClick={handleCopy}
+            className={`btn-primary ${copied ? '!bg-[#2FB67B]' : ''}`}
+          >
+            {copied ? <Check size={15} /> : <Copy size={15} />}
+            {copied ? 'Copied!' : 'Copy Prompt'}
+          </button>
         </div>
       </div>
+
+      {/* Prompt panel */}
+      <div className="surface overflow-hidden">
+        <div className="flex items-center px-4 py-2.5 bg-[#10141C] border-b border-[#232A36]">
+          <span className="text-xs font-mono text-[#6B7686]">optimized-prompt.txt</span>
+          <span className="ml-auto flex items-center gap-1.5 text-[11px] text-[#59C99A] font-semibold uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#2FB67B] pulse-dot" />
+            ready to use
+          </span>
+        </div>
+        <div className="p-5 sm:p-6 max-h-[520px] overflow-y-auto">
+          <div className="prompt-body text-[0.95rem]">{optimizedPrompt.text}</div>
+        </div>
+      </div>
+
+      {/* Component tokens — the four parts of the optimizer run */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+        <StatTile
+          icon={FileText}
+          label="Raw Prompt"
+          value={fmt(analytics?.raw_prompt_tokens ?? 0)}
+          valueClass="text-[#8FB0FF]"
+          sub="original prompt text tokens"
+        />
+        <StatTile
+          icon={ScanSearch}
+          label="Skill Selection"
+          value={fmt(analytics?.skill_selection_tokens ?? 0)}
+          valueClass="text-[#C6CDD9]"
+          sub="LLM tokens consumed to pick the framework"
+        />
+        <StatTile
+          icon={Layers}
+          label="Optimization"
+          value={fmt(optimizedPrompt.optimization_tokens_used)}
+          valueClass="text-[#C6CDD9]"
+          sub="LLM tokens consumed to rewrite the prompt"
+        />
+        <StatTile
+          icon={Zap}
+          label="Execution"
+          value={fmt(analytics?.estimated_execution_tokens ?? 0)}
+          valueClass="text-[#59C99A]"
+          sub="real measured run of the optimized prompt"
+        />
+      </div>
+
+      {/* Reconciliation: the four parts must sum to the optimizer total */}
+      {analytics && (
+        <div className="surface-subtle p-4 mt-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-[#9AA4B2] font-mono">
+            <span className="text-[#6B7686] font-sans">Optimizer run ·</span>{' '}
+            {fmt(analytics.raw_prompt_tokens)} + {fmt(analytics.skill_selection_tokens)} +{' '}
+            {fmt(analytics.optimization_tokens)} + {fmt(analytics.estimated_execution_tokens)} ={' '}
+            <span className="font-semibold text-[#8FB0FF]">{fmt(analytics.total_optimizer_tokens)} tokens</span>
+          </p>
+          <p className="text-xs font-mono text-[#E8C079] font-semibold">
+            <Sigma size={11} className="inline mr-1 -mt-0.5" />
+            {fmtMoney(analytics.estimated_optimizer_cost)}
+          </p>
+        </div>
+      )}
     </section>
   );
 };

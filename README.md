@@ -11,7 +11,6 @@ The project ships as **three integrated components**: a FastAPI backend (all AI 
 ```
                        ┌──────────────────────┐
    Browser / UI ──────▶│  Frontend (React)    │
-                       │  served by nginx     │
                        └──────────┬───────────┘
                                   │ /api/*
                                   ▼
@@ -22,7 +21,7 @@ The project ships as **three integrated components**: a FastAPI backend (all AI 
 ```
 
 - **Backend** — FastAPI + uvicorn. Owns the API key, runs every optimization stage, streams progress over SSE, and computes all token/cost analytics. **No business logic or credentials exist in the CLI or the UI.**
-- **Frontend** — React + Vite + Tailwind, served by nginx which proxies `/api/*` to the backend.
+- **Frontend** — React + Vite + Tailwind; the dev server proxies `/api/*` to the backend.
 - **CLI** — `prompt-optimizer`, a thin Typer client that streams from the backend and renders a professional terminal report.
 
 ### Optimization pipeline
@@ -57,19 +56,14 @@ The pipeline runs one-shot (`POST /optimize/run`) or as a live SSE stream (`POST
 │   │   │                     #   cost calculator, manual projection, orchestrator
 │   │   └── skills/           # prompt-engineering framework definitions
 │   ├── requirements.txt
-│   ├── .env.example
-│   └── Dockerfile
+│   └── .env.example
 ├── frontend/                 # React + Vite web UI
-│   ├── src/components/       # analysis, diff, skill, report, comparison, cost views
-│   ├── src/api/              # axios + SSE client
-│   ├── Dockerfile            # multi-stage build → nginx
-│   ├── nginx.conf.template   # serves SPA + proxies /api/* to the backend
-│   └── entrypoint.sh         # injects $BACKEND_URL and $PORT at runtime
+│   ├── src/components/       # analysis, comparison, results, cost views
+│   └── src/api/              # axios + SSE client
 ├── cli/                      # installable terminal client
 │   ├── prompt_optimizer_cli/ # main, client (SSE + fallback), formatter, config
 │   ├── pyproject.toml        # console script: `prompt-optimizer`
 │   └── README.md
-├── docker-compose.yml        # backend + frontend, one command
 ├── .gitignore
 └── .gitattributes
 ```
@@ -83,7 +77,6 @@ The pipeline runs one-shot (`POST /optimize/run`) or as a live SSE stream (`POST
 - **Manual-workflow comparison** — estimates what a human would consume (clarifying questions, decisions, iteration) vs. what the optimizer uses, including % reduction and money saved.
 - **Streaming output** — the web UI and CLI show live progress phases and a streaming optimized prompt.
 - **Prompt diff** — word-level diff between the raw and optimized prompts.
-- **Docker-first** — run the whole stack with `docker compose up -d`; deploy to any Docker-capable cloud (Railway, Render, Fly.io, VPS).
 - **Key stays server-side** — users of the UI or CLI never need the AI provider key.
 
 ---
@@ -94,33 +87,15 @@ The pipeline runs one-shot (`POST /optimize/run`) or as a live SSE stream (`POST
 
 - Python 3.10+ (backend & CLI)
 - Node.js 18+ (frontend build)
-- Docker + Docker Compose (recommended path)
 - A Groq (or OpenAI-compatible) API key
 
-### Option A — Docker (recommended)
-
-```bash
-# 1. configure your key
-cp backend/.env.example backend/.env   # then edit backend/.env and set API_KEY
-
-# 2. build & start both services
-docker compose up --build -d
-
-# 3. verify
-curl http://localhost:8080/health
-# → {"status":"ok","service":"AI Prompt Optimization Agent"}
-```
-
-- Web UI: http://localhost
-- Backend: http://localhost:8080
-
-### Option B — Run without Docker
+### Run locally
 
 **Backend**
 
 ```bash
 cd backend
-python -m venv .venv && .venv/Scripts/activate   # Windows
+python -m venv .venv && .venv/Scripts/activate   # Windows: `.venv\Scripts\Activate.ps1`
 pip install -r requirements.txt
 cp .env.example .env                            # set API_KEY
 uvicorn app.main:app --host 0.0.0.0 --port 8080
@@ -153,7 +128,7 @@ prompt-optimizer "Generate an e-commerce website"
 | --- | --- | --- |
 | `API_KEY` | — | Your AI provider key (required). |
 | `API_BASE_URL` | `https://api.groq.com/openai/v1` | OpenAI-compatible chat completions endpoint. |
-| `API_MODEL` | `llama-3.3-70b-versatile` | Model used for every optimization stage. |
+| `API_MODEL` | `openai/gpt-oss-120b` | Model used for every optimization stage. |
 
 ### CLI (environment)
 
@@ -199,25 +174,6 @@ All endpoints are under the `/api/v1` prefix.
 
 ---
 
-## Deployment
-
-### Railway (or any Docker PaaS)
-
-1. Push this repository to GitHub.
-2. **Backend service** — root directory `backend`; add `API_KEY`, `API_BASE_URL`, `API_MODEL` variables; generate a public domain.
-3. **Frontend service** — root directory `frontend`; add `BACKEND_URL=https://<backend-domain>`; generate a public domain.
-4. The images listen on Railway's injected `$PORT` automatically.
-
-### VPS
-
-```bash
-docker compose up --build -d
-```
-
-Then share the server URL. For the CLI, other users only need `PROMPT_OPTIMIZER_API_URL=http://<host>:8080`.
-
----
-
 ## Tech stack
 
 | Layer | Technology |
@@ -225,15 +181,14 @@ Then share the server URL. For the CLI, other users only need `PROMPT_OPTIMIZER_
 | Backend | Python, FastAPI, uvicorn, pydantic-settings, httpx, tiktoken |
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS, axios (SSE) |
 | CLI | Python, Typer, httpx, Rich |
-| Infra | Docker, Docker Compose, nginx |
 
 ---
 
 ## Security notes
 
-- The AI provider API key lives **only** in the backend (`.env` / platform secrets) and is excluded from Docker images and git (`backend/.env` is gitignored).
+- The AI provider API key lives **only** in the backend (`.env`) and is excluded from git (`backend/.env` is gitignored).
 - The CLI and web UI require no credentials and contain no business logic — they consume the backend only.
-- Never commit `.env` files or expose them in public images.
+- Never commit `.env` files or expose them publicly.
 
 ---
 

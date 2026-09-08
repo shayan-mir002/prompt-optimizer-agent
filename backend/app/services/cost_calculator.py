@@ -1,11 +1,11 @@
 """
 app/services/cost_calculator.py
-Token-to-cost conversion using Groq llama-3.3-70b-versatile pricing.
+Token-to-cost conversion using openai/gpt-oss-120b pricing.
 
 Pricing (per 1 000 tokens):
-  Input         $0.00059   ($0.59  / 1 M)
-  Cached Input  $0.00059   ($0.59  / 1 M, conservative)
-  Output        $0.00079   ($0.79  / 1 M)
+  Input         $0.00015   ($0.15  / 1 M)
+  Cached Input  $0.00015   ($0.15  / 1 M, conservative)
+  Output        $0.00060   ($0.60  / 1 M)
 """
 from app.core.config import Settings
 

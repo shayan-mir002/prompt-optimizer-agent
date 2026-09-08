@@ -1,40 +1,51 @@
 // src/components/ui/Badge.tsx
 import React from 'react';
 
-type BadgeVariant = 'indigo' | 'cyan' | 'emerald' | 'amber' | 'rose' | 'slate';
+export type BadgeTone = 'accent' | 'emerald' | 'amber' | 'rose' | 'neutral';
 
 interface BadgeProps {
   label: string;
-  variant?: BadgeVariant;
-  size?: 'sm' | 'md';
+  tone?: BadgeTone;
+  dot?: boolean;
 }
 
-const variantMap: Record<BadgeVariant, string> = {
-  indigo:  'bg-indigo-500/15 text-indigo-300 border-indigo-500/25',
-  cyan:    'bg-cyan-500/15 text-cyan-300 border-cyan-500/25',
-  emerald: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25',
-  amber:   'bg-amber-500/15 text-amber-300 border-amber-500/25',
-  rose:    'bg-rose-500/15 text-rose-300 border-rose-500/25',
-  slate:   'bg-slate-500/15 text-slate-300 border-slate-500/25',
+const toneMap: Record<BadgeTone, string> = {
+  accent:  'text-[#8FB0FF] border-[#4F7CFF]/30 bg-[#4F7CFF]/10',
+  emerald: 'text-[#59C99A] border-[#2FB67B]/30 bg-[#2FB67B]/10',
+  amber:   'text-[#E8C079] border-[#E0A93B]/30 bg-[#E0A93B]/10',
+  rose:    'text-[#F09AA8] border-[#E5677E]/30 bg-[#E5677E]/10',
+  neutral: 'text-[#9AA4B2] border-[#232A36] bg-[#161C26]',
 };
 
-export const Badge: React.FC<BadgeProps> = ({ label, variant = 'slate', size = 'sm' }) => {
-  const sizeClass = size === 'sm' ? 'text-xs px-2.5 py-0.5' : 'text-sm px-3 py-1';
-  return (
-    <span className={`inline-flex items-center rounded-full border font-medium ${sizeClass} ${variantMap[variant]}`}>
-      {label}
-    </span>
-  );
+const dotMap: Record<BadgeTone, string> = {
+  accent:  'bg-[#4F7CFF]',
+  emerald: 'bg-[#2FB67B]',
+  amber:   'bg-[#E0A93B]',
+  rose:    'bg-[#E5677E]',
+  neutral: 'bg-[#6B7686]',
 };
 
-export function complexityBadge(c: string): BadgeVariant {
+export const Badge: React.FC<BadgeProps> = ({ label, tone = 'neutral', dot = true }) => (
+  <span className={`badge ${toneMap[tone]}`}>
+    {dot && <span className={`w-1.5 h-1.5 rounded-full ${dotMap[tone]}`} />}
+    {label}
+  </span>
+);
+
+export function complexityBadge(c: string): BadgeTone {
   if (c === 'simple') return 'emerald';
   if (c === 'complex') return 'rose';
   return 'amber';
 }
 
-export function ambiguityBadge(a: string): BadgeVariant {
+export function ambiguityBadge(a: string): BadgeTone {
   if (a === 'low') return 'emerald';
   if (a === 'high') return 'rose';
   return 'amber';
+}
+
+export function scoreTone(score: number, low: number, high: number): BadgeTone {
+  if (score >= high) return 'emerald';
+  if (score >= low) return 'amber';
+  return 'rose';
 }

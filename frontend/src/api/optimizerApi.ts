@@ -21,6 +21,26 @@ const api = axios.create({
   timeout: 600_000,
 });
 
+export interface BackendConfig {
+  model: string;
+  base_url: string;
+  pricing_per_1k: {
+    input: number;
+    output: number;
+    cached_input: number;
+  };
+}
+
+// Read-only model + pricing metadata for the UI (display only).
+export async function fetchConfig(): Promise<BackendConfig | null> {
+  try {
+    const response = await api.get<BackendConfig>('/config');
+    return response.data;
+  } catch {
+    return null;
+  }
+}
+
 // Stage 1 — validate, analyze clarity, plan/generate questions, project
 // the before-optimization (manual) token cost. Runs NO optimization.
 export async function analyzePrompt(prompt: string): Promise<PreOptimizationResponse> {

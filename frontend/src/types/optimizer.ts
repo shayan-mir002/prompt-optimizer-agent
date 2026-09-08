@@ -27,6 +27,10 @@ export interface ClarificationResult {
   question_count_tokens: number;
   question_text_tokens: number;
   question_generation_tokens: number;
+  question_count_input_tokens?: number;
+  question_count_output_tokens?: number;
+  question_text_input_tokens?: number;
+  question_text_output_tokens?: number;
   num_questions: number;
   estimated_answer_tokens: number;
   estimated_combined_prompt_tokens: number;
